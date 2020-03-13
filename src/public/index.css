@@ -1,0 +1,87 @@
+html {
+  overflow: hidden;
+}
+
+body {
+    background-color: #353535;
+    color: lightgrey;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 30%;
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+  background-color: #353535;
+  color: lightgrey;
+  border-radius: 1vw;
+  border: 2pt solid #535353;
+}
+
+.form-control {
+  width:100%;
+  background-color: #535353;
+  border-color: #535353;
+  color: lightgrey;
+}
+
+.form-control:focus {
+  width:100%;
+  background-color: #535353;
+  border-color: #535353;
+  color: lightgrey;
+}
+
+.btn {
+  background-color: #535353 !important;
+  border-color: #535353;
+  color: lightgrey;
+  width: 100%;
+}
+
+.vertical-center {
+  min-height: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.full-width {
+  width: 100%;
+  min-width: 100%;
+  display: block;
+}
+
+.sidebar {
+  width: 30%;
+  min-height: 0;
+  border-right: 1pt solid #535353;
+}
+
+.sidebar-item {
+  min-width: 100%;
+  min-height: 75pt;
+  border-bottom: 1pt solid #535353;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+.scrollable {
+  overflow-y: auto;
+  height:100vh;
+}
+
+.cont {
+  display: flex;
+}
+
+.form {
+  flex-basis: 100vw;
+  padding-right: 20%;
+  padding-left: 20%;
+  align-self: center;
+}

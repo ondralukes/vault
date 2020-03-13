@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ondralukes.cz</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" href="index.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="index.js"></script>
+  <script src="index-crypto-browserified.js"></script>
+</head>
+<body onload="init();">
+  <div class="cont">
+    <div class="sidebar">
+      <div class="scrollable">
+      <div class="sidebar-item" id="sidebar-item-template" style="display: none;">
+        <div class="sidebar-item-codename">template</div>
+        <button type="button" class="btn btn-primary sidebar-item-decrypt-btn">Unlock</button>
+      </div>
+    </div>
+    </div>
+    <div class="form text-center">
+      <input class="form-control mt-3" id="vault-codename" type="text" placeholder="Vault codename">
+      <small class="form-text mb-2 text-left">Codename is NOT encrypted.</small>
+      <input class="form-control mt-1" id="vault-name" type="text" placeholder="Vault name">
+      <small class="form-text mb-2 text-left">Name is encrypted.</small>
+      <button class="btn btn-primary mb-3 mt-1" type="button" onclick="createVault();">Create new vault</button>
+      <div id="create-vault-result"></div>
+    </div>
+  </div>
+
+<div class="overlay text-center p-5" id="overlay" style="display: none;">
+  <h1>Authentication required.</h1>
+  <span>Authentication is required to <span id="overlay-message"></span>.</span>
+  <input class="form-control my-3" type="text" id="name" placeholder="Name">
+  <input class="form-control my-3" type="password" id="password" placeholder="Password">
+  <button onclick="authenticate();" class="btn btn-primary" type="button">Authenticate</button>
+  <div class="my-2">or</div>
+  <button onclick="register();" class="btn btn-primary" type="button">Register</button><br>
+  <div class="my-3" id="overlay-result"></div>
+</div>
+</body>
+</html>
