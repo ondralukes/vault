@@ -69,11 +69,16 @@ function listVaults(){
 
 function unlockVault(codename) {
   console.log('Decrypting vault ' + name);
+  var sidebar = document.getElementById('sidebar-item-' + codename);
+  sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+    .innerHTML = "Unlocking...";
   saveRSA('unlock vault', () => {
     var data = vaults.find(x => x.codename == codename);
     authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
       if(status != 200){
         throwError("Failed to get vault data.");
+        sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+          .innerHTML = "Unlock";
         forgetRSA();
         return;
       }
@@ -82,6 +87,8 @@ function unlockVault(codename) {
       var keyObj = vault.keys.find(x => x.user == storedName);
       if(!keyObj){
         throwError('Vault has no key for user ' + storedName);
+        sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+          .innerHTML = "Unlock";
         forgetRSA();
         return;
       }
@@ -169,6 +176,18 @@ function authenticatedRequest(message, url, data, callback, keep){
     document.getElementById('overlay').style.display = "";
     document.getElementById('overlay-message').innerHTML = message;
     document.getElementById('overlay-result').innerHTML = "";
+    Array.from(document.getElementsByClassName('first-login-only')).forEach((item) => {
+      if(!storedName){
+        item.style.display = "";
+      } else {
+        item.style.display = "none";
+      }
+    });
+    if(storedName){
+      document.getElementById('password').focus();
+    } else {
+      document.getElementById('name').focus();
+    }
   } else {
     authenticate();
   }
@@ -176,7 +195,6 @@ function authenticatedRequest(message, url, data, callback, keep){
 
 function forgetRSA(){
   decryptedRSA = null;
-  storedName = null;
 }
 
 function saveRSA(message, callback){
@@ -218,6 +236,7 @@ function registerRequest(user){
 
 function authenticate(){
   var req = {name: document.getElementById('name').value};
+  if(storedName) req.name = storedName;
   if(decryptedRSA){
     req.name = storedName;
   }
@@ -241,9 +260,9 @@ function authenticate(){
       console.log('Signing token...');
       var encryptedToken = cryptoTools.encryptToken(res.user.rsa, res.token)
       sendEncryptedToken(encryptedToken);
+      storedName = res.user.name;
       if(keepRSA){
         decryptedRSA = res.user.rsa;
-        storedName = res.user.name;
       } else {
         forgetRSA();
       }

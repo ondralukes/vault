@@ -34,11 +34,13 @@
 <div class="overlay text-center p-5" id="overlay" style="display: none;">
   <h1>Authentication required.</h1>
   <span>Authentication is required to <span id="overlay-message"></span>.</span>
-  <input class="form-control my-3" type="text" id="name" placeholder="Name">
+  <form onsubmit="authenticate(); return false;">
+  <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
   <input class="form-control my-3" type="password" id="password" placeholder="Password">
-  <button onclick="authenticate();" class="btn btn-primary" type="button">Authenticate</button>
-  <div class="my-2">or</div>
-  <button onclick="register();" class="btn btn-primary" type="button">Register</button><br>
+  <input type="submit" class="btn btn-primary" value="Authenticate">
+  <div class="my-2  first-login-only">or</div>
+  <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
+</form>
   <div class="my-3" id="overlay-result"></div>
 </div>
 <div class="overlay text-center p-5" id="error" style="display: none;">
