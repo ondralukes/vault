@@ -55,15 +55,81 @@ function listVaults(){
         var clonedNode = template.cloneNode(true);
         clonedNode.style.display = "";
         clonedNode.classList.add('sidebar-item-cloned');
+        clonedNode.id = 'sidebar-item-' + vault.codename;
         clonedNode.getElementsByClassName('sidebar-item-codename')[0].innerHTML = vault.codename;
+        clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0].onclick = function(){
+          unlockVault(vault.codename);
+        };
         template.parentNode.appendChild(clonedNode);
       });
     }
   }, false);
 }
 
-function decryptVault(name) {
-  console.log('decrypting vault' + name);
+function unlockVault(codename) {
+  console.log('Decrypting vault ' + name);
+  saveRSA('unlock vault', () => {
+    var data = vaults.find(x => x.codename == codename);
+    authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
+      if(status != 200){
+        console.log("Failed to get vault data.");
+        return;
+      }
+      vault = JSON.parse(response);
+      console.log('Decrypting vault key');
+      var encryptedVaultKey = vault.keys.find(x => x.user == storedName).key;
+      var decryptedVaultKey = cryptoTools.decryptKey(decryptedRSA, encryptedVaultKey);
+      vault.key = decryptedVaultKey;
+      console.log('Decrypted vault key is '+ decryptedVaultKey);
+      console.log('Decrypting vault name');
+      vault.name = cryptoTools.decryptData(decryptedVaultKey, vault.name);
+      console.log('Vault name is ' + vault.name);
+      vaults.forEach((v, i) => {
+        if(v.codename == vault.codename){
+          var accessToken = v.accessToken;
+          vaults[i] = vault;
+          vaults[i].accessToken = accessToken;
+        }
+      });
+      forgetRSA();
+
+      var sidebar = document.getElementById('sidebar-item-' + vault.codename);
+      //Display name in sidebar
+      sidebar.getElementsByClassName('sidebar-item-name')[0]
+        .innerHTML = vault.name;
+
+      sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+        .onclick = function(){
+        lockVault(vault.codename);
+      };
+      sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+        .innerHTML = "Lock";
+    }, true);
+  });
+}
+
+function lockVault(codename){
+  vaults.forEach((v, i) => {
+    if(v.codename == codename){
+      var lockedVault = {
+        codename: v.codename,
+        accessToken: v.accessToken
+      };
+      vaults[i] = lockedVault;
+    }
+  });
+
+  var sidebar = document.getElementById('sidebar-item-' + vault.codename);
+  //Hide name in sidebar
+  sidebar.getElementsByClassName('sidebar-item-name')[0]
+    .innerHTML = '[Locked]';
+
+  sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+    .onclick = function(){
+    unlockVault(vault.codename);
+  };
+  sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+    .innerHTML = "Unlock";
 }
 
 ///XHR and auth overlay

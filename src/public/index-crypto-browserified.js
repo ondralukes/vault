@@ -6184,6 +6184,7 @@ Sha512.prototype._hash = function () {
 module.exports = Sha512
 
 },{"./hash":27,"inherits":8,"safe-buffer":25}],35:[function(require,module,exports){
+(function (Buffer){
 const sha = require('sha.js');
 const RSA = require('node-rsa');
 const aes = require('aes-js');
@@ -6229,8 +6230,14 @@ module.exports.encryptToken = function(rsaKey, token){
 }
 
 module.exports.encryptKey = function(rsaKey, key){
+  var rsa = new RSA(rsaKey.public);
+  return rsa.encrypt(key, 'base64', 'hex');
+}
+
+module.exports.decryptKey = function(rsaKey, key){
   var rsa = new RSA(rsaKey.private);
-  return rsa.encrypt(key, 'hex', 'hex');
+  var buf = Buffer.from(key, 'base64');
+  return rsa.decrypt(buf, 'hex');
 }
 
 module.exports.encryptData = function(hexKey, data){
@@ -6244,7 +6251,19 @@ module.exports.encryptData = function(hexKey, data){
   return encrypted;
 }
 
-},{"aes-js":1,"node-rsa":9,"sha.js":28}],36:[function(require,module,exports){
+module.exports.decryptData = function(hexKey, data){
+  var key = aes.utils.hex.toBytes(hexKey);
+  var data = aes.utils.hex.toBytes(data);
+
+  var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
+  var bytes = aesCtr.decrypt(data);
+
+  var decrypted = aes.utils.utf8.fromBytes(bytes);
+  return decrypted;
+}
+
+}).call(this,require("buffer").Buffer)
+},{"aes-js":1,"buffer":86,"node-rsa":9,"sha.js":28}],36:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');

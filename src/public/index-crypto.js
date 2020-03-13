@@ -43,8 +43,14 @@ module.exports.encryptToken = function(rsaKey, token){
 }
 
 module.exports.encryptKey = function(rsaKey, key){
+  var rsa = new RSA(rsaKey.public);
+  return rsa.encrypt(key, 'base64', 'hex');
+}
+
+module.exports.decryptKey = function(rsaKey, key){
   var rsa = new RSA(rsaKey.private);
-  return rsa.encrypt(key, 'hex', 'hex');
+  var buf = Buffer.from(key, 'base64');
+  return rsa.decrypt(buf, 'hex');
 }
 
 module.exports.encryptData = function(hexKey, data){
@@ -56,4 +62,15 @@ module.exports.encryptData = function(hexKey, data){
 
   var encrypted = aes.utils.hex.fromBytes(bytes);
   return encrypted;
+}
+
+module.exports.decryptData = function(hexKey, data){
+  var key = aes.utils.hex.toBytes(hexKey);
+  var data = aes.utils.hex.toBytes(data);
+
+  var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
+  var bytes = aesCtr.decrypt(data);
+
+  var decrypted = aes.utils.utf8.fromBytes(bytes);
+  return decrypted;
 }

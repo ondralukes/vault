@@ -405,6 +405,102 @@ app.post('/vault/create', async (req, res) => {
   }
 });
 
+app.post('/vault/get', async (req, res) => {
+  //Do not require auth, request is secured by access token.
+  delete req.body.encryptedToken;
+
+  function validate(){
+    return new Promise((resolve, reject) => {
+      if(Object.keys(req.body).length > 2){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Too many arguments provided.");
+        res.end();
+        reject();
+      }
+      if(!req.body.codename){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No codename provided.");
+        res.end();
+        reject();
+      }
+      if(!req.body.accessToken){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No access token provided.");
+        res.end();
+        reject();
+      }
+      resolve();
+    });
+  }
+
+  function connectToDB(){
+    return new Promise((resolve, reject) => {
+      mongo.connect(url,
+        {
+          useNewUrlParser: true,
+          useUnifiedTopology: true
+        },
+        (err, conn) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB connecting error.");
+            res.end();
+            reject();
+          }
+          resolve(conn);
+        });
+      });
+    }
+
+    function getVault(db, params){
+      return new Promise((resolve, reject) => {
+        var query = { codename: params.codename, accessToken: params.accessToken };
+        var projection = {_id: 0};
+        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB lookup error.");
+            res.end();
+            reject();
+          }
+          if(dbres.length != 1){
+            res.statusCode = 400;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("Vault does not exist.");
+            res.end();
+            reject();
+          } else {
+            //Do not send access token to user
+            delete dbres[0].accessToken;
+            resolve(dbres[0]);
+          }
+        });
+      });
+    }
+
+    var vault;
+    try {
+      await validate();
+      var conn = await connectToDB();
+      var db = conn.db('vault');
+      vault = await getVault(db, req.body);
+      conn.close();
+    } catch (err){
+      if(conn) conn.close();
+      return;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.write(JSON.stringify(vault));
+    res.end();
+});
+
 app.post('/user/get/private', async (req, res) => {
 
   //Save user before the session is destroyed in auth()
