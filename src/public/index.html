@@ -31,7 +31,6 @@
       <div id="create-vault-result"></div>
     </div>
   </div>
-
 <div class="overlay text-center p-5" id="overlay" style="display: none;">
   <h1>Authentication required.</h1>
   <span>Authentication is required to <span id="overlay-message"></span>.</span>
@@ -41,6 +40,11 @@
   <div class="my-2">or</div>
   <button onclick="register();" class="btn btn-primary" type="button">Register</button><br>
   <div class="my-3" id="overlay-result"></div>
+</div>
+<div class="overlay text-center p-5" id="error" style="display: none;">
+  <h1>Error.</h1>
+  <span id="error-message"></span>
+  <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
 </div>
 </body>
 </html>

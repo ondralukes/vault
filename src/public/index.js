@@ -72,12 +72,19 @@ function unlockVault(codename) {
     var data = vaults.find(x => x.codename == codename);
     authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
       if(status != 200){
-        console.log("Failed to get vault data.");
+        throwError("Failed to get vault data.");
+        forgetRSA();
         return;
       }
       vault = JSON.parse(response);
       console.log('Decrypting vault key');
-      var encryptedVaultKey = vault.keys.find(x => x.user == storedName).key;
+      var keyObj = vault.keys.find(x => x.user == storedName);
+      if(!keyObj){
+        throwError('Vault has no key for user ' + storedName);
+        forgetRSA();
+        return;
+      }
+      var encryptedVaultKey = keyObj.key;
       var decryptedVaultKey = cryptoTools.decryptKey(decryptedRSA, encryptedVaultKey);
       vault.key = decryptedVaultKey;
       console.log('Decrypted vault key is '+ decryptedVaultKey);
@@ -130,6 +137,16 @@ function lockVault(codename){
   };
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
     .innerHTML = "Unlock";
+}
+
+function hideError(){
+  document.getElementById('error').style.display = 'none';
+}
+
+function throwError(err){
+  console.error('Error: ' + err);
+  document.getElementById('error').style.display = '';
+  document.getElementById('error-message').innerHTML = err;
 }
 
 ///XHR and auth overlay
