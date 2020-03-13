@@ -57,8 +57,9 @@ function listVaults(){
         clonedNode.classList.add('sidebar-item-cloned');
         clonedNode.id = 'sidebar-item-' + vault.codename;
         clonedNode.getElementsByClassName('sidebar-item-codename')[0].innerHTML = vault.codename;
-        clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0].onclick = function(){
-          unlockVault(vault.codename);
+        clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0].onclick = function(e){
+          var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+          unlockVault(codename);
         };
         template.parentNode.appendChild(clonedNode);
       });
@@ -106,8 +107,9 @@ function unlockVault(codename) {
         .innerHTML = vault.name;
 
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-        .onclick = function(){
-        lockVault(vault.codename);
+        .onclick = function(e){
+          var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+          lockVault(codename);
       };
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
         .innerHTML = "Lock";
@@ -126,14 +128,15 @@ function lockVault(codename){
     }
   });
 
-  var sidebar = document.getElementById('sidebar-item-' + vault.codename);
+  var sidebar = document.getElementById('sidebar-item-' + codename);
   //Hide name in sidebar
   sidebar.getElementsByClassName('sidebar-item-name')[0]
     .innerHTML = '[Locked]';
 
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-    .onclick = function(){
-    unlockVault(vault.codename);
+    .onclick = function(e){
+      var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+      unlockVault(codename);
   };
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
     .innerHTML = "Unlock";
