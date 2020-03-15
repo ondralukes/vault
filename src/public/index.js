@@ -1,3 +1,5 @@
+const MessageType = Object.freeze({Anonymous:1, NotSigned: 2, Signed: 3});
+
 var vaults;
 
 function init(){
@@ -58,10 +60,14 @@ function listVaults(){
         clonedNode.id = 'sidebar-item-' + vault.codename;
         clonedNode.getElementsByClassName('sidebar-item-codename')[0].innerHTML = vault.codename;
         clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0].onclick = function(e){
+          e.stopPropagation();
           var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
           unlockVault(codename);
         };
-        template.parentNode.appendChild(clonedNode);
+        clonedNode.addEventListener('click', function(){
+          openVault(vault.codename);
+        }, true);
+        template.parentNode.insertBefore(clonedNode, template.parentNode.firstChild);
       });
     }
   }, false);
@@ -115,11 +121,14 @@ function unlockVault(codename) {
 
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
         .onclick = function(e){
+          e.stopPropagation();
           var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
           lockVault(codename);
       };
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
         .innerHTML = "Lock";
+
+      openVault(codename);
     }, true);
   });
 }
@@ -142,6 +151,7 @@ function lockVault(codename){
 
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
     .onclick = function(e){
+      e.stopPropagation();
       var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
       unlockVault(codename);
   };
@@ -149,6 +159,44 @@ function lockVault(codename){
     .innerHTML = "Unlock";
 }
 
+function openVault(codename){
+  vaults.forEach((v, i) => {
+    if(v.codename == codename){
+      if(!v.name){
+        unlockVault(codename);
+      } else {
+        document.getElementById('vault-content').style.display = "";
+        document.getElementById('create-form').style.display = "none";
+      }
+    }
+  });
+}
+
+function closeVault(){
+  document.getElementById('vault-content').style.display = "none";
+  document.getElementById('create-form').style.display = "";
+}
+
+function sendMessage(type) {
+  var message = document.getElementById('message-text').value.replace(/\n/g, "<br>");
+  var template = document.getElementById('message-template');
+  var cloned = template.cloneNode(true);
+  cloned.style.display = "";
+  cloned.getElementsByClassName('message-text')[0].innerHTML = message;
+  switch(type){
+    case MessageType.Anonymous:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
+      break;
+    case MessageType.NotSigned:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
+      break;
+    case MessageType.Signed:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
+      break;
+  }
+  template.parentNode.appendChild(cloned);
+  document.getElementById('message-text').value = "";
+}
 function hideError(){
   document.getElementById('error').style.display = 'none';
 }

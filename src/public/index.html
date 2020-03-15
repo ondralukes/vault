@@ -15,14 +15,17 @@
   <div class="cont">
     <div class="sidebar">
       <div class="scrollable">
-      <div class="sidebar-item" id="sidebar-item-template" style="display: none;">
-        <div class="sidebar-item-name">[Locked]</div>
-        <small class="sidebar-item-codename">Codename</small>
-        <button type="button" class="btn btn-primary sidebar-item-decrypt-btn">Unlock</button>
+        <div class="sidebar-item" id="sidebar-item-template" style="display: none;">
+          <div class="sidebar-item-name">[Locked]</div>
+          <small class="sidebar-item-codename">Codename</small>
+          <button type="button" class="btn btn-primary sidebar-item-decrypt-btn">Unlock</button>
+        </div>
+        <div onclick="closeVault();" class="sidebar-item sidebar-item-create" id="sidebar-item-template">
+          Create new vault
       </div>
     </div>
-    </div>
-    <div class="form text-center">
+  </div>
+    <div id="create-form" class="form text-center">
       <input class="form-control mt-3" id="vault-codename" type="text" placeholder="Vault codename">
       <small class="form-text mb-2 text-left">Codename is NOT encrypted.</small>
       <input class="form-control mt-1" id="vault-name" type="text" placeholder="Vault name">
@@ -30,23 +33,55 @@
       <button class="btn btn-primary mb-3 mt-1" type="button" onclick="createVault();">Create new vault</button>
       <div id="create-vault-result"></div>
     </div>
+
+    <div id="vault-content" class="vault-content"  style="display: none;">
+      <div class="messages">
+        <div class="message" id="message-template" style="display: none;">
+          <div class="message-inner">
+            <div class="message-text">abc</div>
+            <div class="message-info">
+              10:33<img class="message-icon" src="img/anon.svg">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="message-input">
+        <div class="message-input-field p-1">
+          <textarea id="message-text" class="form-control textarea" type="text"></textarea>
+        </div>
+        <div class="message-send-buttons d-inline-block">
+          <button type="button" class="btn btn-primary btn-send-anon my-1" onclick="sendMessage(MessageType.Anonymous);">
+            <img class="message-icon" src="img/anon.svg">
+            Send anonymously
+          </button>
+          <button type="button" class="btn btn-primary btn-send-not-signed my-1" onclick="sendMessage(MessageType.NotSigned);">
+            <img class="message-icon" src="img/warn.svg">
+            Send not signed
+          </button>
+          <button type="button" class="btn btn-primary btn-send-signed my-1" onclick="sendMessage(MessageType.Signed);">
+            <img class="message-icon" src="img/signed.svg">
+            Send signed
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-<div class="overlay text-center p-5" id="overlay" style="display: none;">
-  <h1>Authentication required.</h1>
-  <span>Authentication is required to <span id="overlay-message"></span>.</span>
-  <form onsubmit="authenticate(); return false;">
-  <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
-  <input class="form-control my-3" type="password" id="password" placeholder="Password">
-  <input type="submit" class="btn btn-primary" value="Authenticate">
-  <div class="my-2  first-login-only">or</div>
-  <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
-</form>
-  <div class="my-3" id="overlay-result"></div>
-</div>
-<div class="overlay text-center p-5" id="error" style="display: none;">
-  <h1>Error.</h1>
-  <span id="error-message"></span>
-  <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
-</div>
+  <div class="overlay text-center p-5" id="overlay" style="display: none;">
+    <h1>Authentication required.</h1>
+    <span>Authentication is required to <span id="overlay-message"></span>.</span>
+    <form onsubmit="authenticate(); return false;">
+      <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
+      <input class="form-control my-3" type="password" id="password" placeholder="Password">
+      <input type="submit" class="btn btn-primary" value="Authenticate">
+      <div class="my-2  first-login-only">or</div>
+      <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
+    </form>
+    <div class="my-3" id="overlay-result"></div>
+  </div>
+  <div class="overlay text-center p-5" id="error" style="display: none;">
+    <h1>Error.</h1>
+    <span id="error-message"></span>
+    <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
+  </div>
 </body>
 </html>
