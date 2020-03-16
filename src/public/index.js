@@ -1,6 +1,7 @@
 const MessageType = Object.freeze({Anonymous:1, NotSigned: 2, Signed: 3});
 
 var vaults;
+var openedVault;
 
 function init(){
   listVaults();
@@ -66,7 +67,7 @@ function listVaults(){
         };
         clonedNode.addEventListener('click', function(){
           openVault(vault.codename);
-        }, true);
+        }, false);
         template.parentNode.insertBefore(clonedNode, template.parentNode.firstChild);
       });
     }
@@ -157,9 +158,14 @@ function lockVault(codename){
   };
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
     .innerHTML = "Unlock";
+
+  if(openedVault == codename){
+    closeVault();
+  }
 }
 
 function openVault(codename){
+  openedVault = codename;
   vaults.forEach((v, i) => {
     if(v.codename == codename){
       if(!v.name){
@@ -177,26 +183,84 @@ function closeVault(){
   document.getElementById('create-form').style.display = "";
 }
 
+function sendSignedMessage(){
+  saveRSA('sign a message', () => {
+    sendMessage(MessageType.Signed);
+    forgetRSA();
+  }, true);
+}
+
 function sendMessage(type) {
-  var message = document.getElementById('message-text').value.replace(/\n/g, "<br>");
-  var template = document.getElementById('message-template');
-  var cloned = template.cloneNode(true);
-  cloned.style.display = "";
-  cloned.getElementsByClassName('message-text')[0].innerHTML = message;
+  var messageText = document.getElementById('message-text').value.replace(/\n/g, "<br>");
+
+  var message = {
+    content: messageText,
+    timestamp: Date.now()
+  };
+
   switch(type){
     case MessageType.Anonymous:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
       break;
     case MessageType.NotSigned:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
+      message.sender = storedName;
       break;
     case MessageType.Signed:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
+      message.sender = storedName;
+      message.signature = cryptoTools.sign(decryptedRSA, message.content + 'T' + message.timestamp);
       break;
   }
-  template.parentNode.appendChild(cloned);
-  document.getElementById('message-text').value = "";
+
+  var vault;
+  vaults.forEach((v, i) => {
+    if(v.codename == openedVault){
+      vault = v;
+    }
+  });
+  var encryptedMessage = cryptoTools.encryptData(vault.key, JSON.stringify(message));
+  console.log('Encrypted data is ' + encryptedMessage);
+  console.log('Sending...');
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if(this.readyState == 4){
+      if(this.status == 200){
+        console.log('Sent.');
+
+        //Add message to GUI
+        var template = document.getElementById('message-template');
+        var cloned = template.cloneNode(true);
+        cloned.style.display = "";
+        cloned.getElementsByClassName('message-text')[0].innerHTML = messageText;
+        switch(type){
+          case MessageType.Anonymous:
+            cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
+            break;
+          case MessageType.NotSigned:
+            cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
+            message.sender = storedName;
+            break;
+          case MessageType.Signed:
+            cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
+            message.sender = storedName;
+            break;
+        }
+        template.parentNode.appendChild(cloned);
+        document.getElementById('message-text').value = "";
+      } else {
+        console.log('Sending failed.');
+      }
+    }
+  };
+  xhr.open('POST', '/message/send', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(
+    {
+      codename: vault.codename,
+      accessToken: vault.accessToken,
+      message: encryptedMessage
+    }
+  ));
 }
+
 function hideError(){
   document.getElementById('error').style.display = 'none';
 }

@@ -13,7 +13,7 @@ module.exports.genRSAKey = function(password){
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.encrypt(data);
 
-  var privateHex = aes.utils.hex.fromBytes(bytes);
+  var privateHex = Buffer.from(bytes).toString('base64');
 
   var json = {
     public: rsaKey.exportKey('public'),
@@ -27,7 +27,7 @@ module.exports.decryptRSA = function(rsaKey, password){
   console.log('AES key is ' + aesKey);
 
   var key = aes.utils.hex.toBytes(aesKey);
-  var data = aes.utils.hex.toBytes(rsaKey.private);
+  var data = Buffer.from(rsaKey.private, 'base64');
 
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.decrypt(data);
@@ -60,17 +60,22 @@ module.exports.encryptData = function(hexKey, data){
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.encrypt(data);
 
-  var encrypted = aes.utils.hex.fromBytes(bytes);
+  var encrypted = Buffer.from(bytes).toString('base64');
   return encrypted;
 }
 
 module.exports.decryptData = function(hexKey, data){
   var key = aes.utils.hex.toBytes(hexKey);
-  var data = aes.utils.hex.toBytes(data);
+  var data = Buffer.from(data, 'base64');
 
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.decrypt(data);
 
   var decrypted = aes.utils.utf8.fromBytes(bytes);
   return decrypted;
+}
+
+module.exports.sign = function(rsaKey, data){
+  var rsa = new RSA(rsaKey.private);
+  return rsa.sign(data, 'base64', 'utf8');
 }
