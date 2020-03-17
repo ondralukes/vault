@@ -1,13 +1,11 @@
 const mongodb = require('mongodb');
 const express = require('express');
-const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const session = require('express-session');
 const RSA = require('node-rsa');
 
 const mongo = mongodb.MongoClient;
 const url = 'mongodb://localhost:27017/vault';
-const bcryptRounds = 14;
 
 var app = express();
 
