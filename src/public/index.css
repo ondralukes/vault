@@ -96,7 +96,6 @@ body {
   flex-direction: column;
   background-color: #353535;
   flex-basis: 100%;
-  padding: 20pt;
   max-width: 100%;
 }
 
@@ -104,6 +103,7 @@ body {
   overflow-y: auto;
   flex-basis: 0;
   flex-grow: 1;
+  padding: 20pt;
 }
 
 .message-inner {
@@ -129,6 +129,7 @@ body {
 .message-input {
   align-self: stretch;
   display: flex;
+  padding: 20pt;
 }
 
 .message-text {
@@ -144,4 +145,32 @@ overflow-wrap: anywhere;
 
 .textarea {
   height: 100% !important;
+}
+
+.infobar {
+  padding: 20pt;
+}
+
+.vault-sections {
+  display: flex;
+  justify-content: space-around;
+}
+
+.text-inverted {
+  color: #353535;
+  background-color: lightgray;
+}
+
+.settings-section{
+  padding: 20pt;
+  display: inline-block;
+}
+
+.value {
+  background-color: #535353;
+  color: lightgray;
+  font-family: monospace;
+  padding-left: 5pt;
+  padding-right: 5pt;
+  border-radius: 5pt
 }

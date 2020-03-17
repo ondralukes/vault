@@ -35,7 +35,16 @@
     </div>
 
     <div id="vault-content" class="vault-content"  style="display: none;">
-      <div class="messages">
+      <div class="infobar">
+        <h2 class="text-center vault-name-ins">Info</h2>
+        <div class="vault-sections">
+          <div class="section-btn text-inverted" onclick="switchSection(0);">Messages</div>
+          <div class="section-btn" onclick="switchSection(1);">Settings</div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages messages-section">
         <div id="old-messages-load-trigger"></div>
         <div class="message" id="message-template" style="display: none;">
           <div class="message-inner">
@@ -48,7 +57,7 @@
         </div>
         <div id="new-messages-load-trigger"></div>
       </div>
-      <div class="message-input">
+      <div class="message-input messages-section">
         <div class="message-input-field p-1">
           <textarea id="message-text" class="form-control textarea" type="text"></textarea>
         </div>
@@ -67,7 +76,24 @@
           </button>
         </div>
       </div>
-    </div>
+
+      <!-- Settings -->
+      <div class="settings-section">
+        Codename: <span class="value vault-codename-ins"></span>
+        <br>
+        Name: <span class="value vault-name-ins"></span>
+        <br>
+        Key: <span class="value"
+        onmouseover="event.target.innerHTML = getOpenVault().key;"
+        onmouseout="event.target.innerHTML = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';">
+        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      </span>
+      <br>
+      <small>This key is used for encrypting all data in this vault. Don't show it to anyone! Hover to show.</small>
+      <br>
+      //TODO: Member management
+      </div>
+  </div>
   </div>
   <div class="overlay text-center p-5" id="overlay" style="display: none;">
     <h1>Authentication required.</h1>

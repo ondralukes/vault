@@ -11,6 +11,23 @@ function init(){
   messageGetInterval = setInterval(function(){onScrollMessages();},1000);
 }
 
+function switchSection(sec){
+  Array.from(document.getElementsByClassName('messages-section')).forEach((item) => {
+    item.style.display = sec==0?"":"none";
+  });
+  Array.from(document.getElementsByClassName('settings-section')).forEach((item) => {
+    item.style.display = sec==1?"":"none";
+  });
+  Array.from(document.getElementsByClassName('section-btn')).forEach((item, i) => {
+    if(sec == i){
+      item.classList.add('text-inverted');
+    } else {
+      item.classList.remove('text-inverted');
+    }
+  });
+
+}
+
 function createVault(){
   saveRSA('create new vault', () => {
     console.log('Generating vault key');
@@ -180,6 +197,13 @@ function openVault(codename){
         waitingForMessages = false;
         document.getElementById('vault-content').style.display = "";
         document.getElementById('create-form').style.display = "none";
+        Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
+          item.innerHTML = vault.name;
+        });
+        Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
+          item.innerHTML = vault.codename;
+        });
+        switchSection(0);
         clearMessages();
       }
     }
@@ -220,12 +244,7 @@ function sendMessage(type) {
       break;
   }
 
-  var vault;
-  vaults.forEach((v, i) => {
-    if(v.codename == openedVault){
-      vault = v;
-    }
-  });
+  var vault = getOpenVault();
   var encryptedMessage = cryptoTools.encryptData(vault.key, JSON.stringify(message));
   console.log('Encrypted data is ' + encryptedMessage);
   console.log('Sending...');
@@ -293,12 +312,7 @@ var waitingForMessages = false;
 
 function getMessages(newMessage){
 
-  var vault;
-  vaults.forEach((v, i) => {
-    if(v.codename == openedVault){
-      vault = v;
-    }
-  });
+  var vault = getOpenVault();
 
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
@@ -400,6 +414,15 @@ function throwError(err){
   document.getElementById('error-message').innerHTML = err;
 }
 
+function getOpenVault(){
+  var vault;
+  vaults.forEach((v, i) => {
+    if(v.codename == openedVault){
+      vault = v;
+    }
+  });
+  return vault;
+}
 ///XHR and auth overlay
 var decryptedRSA;
 var storedName;
