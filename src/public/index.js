@@ -1,10 +1,14 @@
 const MessageType = Object.freeze({Anonymous:1, NotSigned: 2, Signed: 3});
 
+const messagesChunk = 32;
+
 var vaults;
 var openedVault;
+var messageGetInterval;
 
 function init(){
   listVaults();
+  messageGetInterval = setInterval(function(){onScrollMessages();},1000);
 }
 
 function createVault(){
@@ -171,8 +175,12 @@ function openVault(codename){
       if(!v.name){
         unlockVault(codename);
       } else {
+        newMessageIndex = v.messagesCount;
+        oldMessageIndex = v.messagesCount;
+        waitingForMessages = false;
         document.getElementById('vault-content').style.display = "";
         document.getElementById('create-form').style.display = "none";
+        clearMessages();
       }
     }
   });
@@ -181,6 +189,7 @@ function openVault(codename){
 function closeVault(){
   document.getElementById('vault-content').style.display = "none";
   document.getElementById('create-form').style.display = "";
+  openedVault = null;
 }
 
 function sendSignedMessage(){
@@ -195,6 +204,7 @@ function sendMessage(type) {
 
   var message = {
     content: messageText,
+    length: messageText.length,
     timestamp: Date.now()
   };
 
@@ -224,27 +234,6 @@ function sendMessage(type) {
     if(this.readyState == 4){
       if(this.status == 200){
         console.log('Sent.');
-
-        //Add message to GUI
-        var template = document.getElementById('message-template');
-        var cloned = template.cloneNode(true);
-        cloned.style.display = "";
-        cloned.getElementsByClassName('message-text')[0].innerHTML = messageText;
-        switch(type){
-          case MessageType.Anonymous:
-            cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
-            break;
-          case MessageType.NotSigned:
-            cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
-            message.sender = storedName;
-            break;
-          case MessageType.Signed:
-            cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
-            message.sender = storedName;
-            break;
-        }
-        template.parentNode.appendChild(cloned);
-        document.getElementById('message-text').value = "";
       } else {
         console.log('Sending failed.');
       }
@@ -259,6 +248,146 @@ function sendMessage(type) {
       message: encryptedMessage
     }
   ));
+}
+
+function showMessage(message, newMessage){
+  //Add message to GUI
+  var template = document.getElementById('message-template');
+  var cloned = template.cloneNode(true);
+  cloned.style.display = "";
+  cloned.getElementsByClassName('message-text')[0].innerHTML = message.content;
+  switch(message.type){
+    case MessageType.Anonymous:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
+      cloned.getElementsByClassName('message-sender')[0].innerHTML = '[Anonymous]';
+      break;
+    case MessageType.NotSigned:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
+      cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
+      break;
+    case MessageType.Signed:
+      cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
+      cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
+      break;
+  }
+  cloned.classList.add('message-generated');
+  if(newMessage){
+    template.parentNode.appendChild(cloned);
+  } else {
+    template.parentNode.insertBefore(cloned, template);
+  }
+  document.getElementById('message-text').value = "";
+}
+
+function clearMessages(){
+  Array.from(document.getElementsByClassName('message-generated')).forEach((item) => {
+    item.remove();
+  });
+
+}
+
+var oldMessageIndex;
+var newMessageIndex;
+var loadNewerOrOlder = true;
+var waitingForMessages = false;
+
+function getMessages(newMessage){
+
+  var vault;
+  vaults.forEach((v, i) => {
+    if(v.codename == openedVault){
+      vault = v;
+    }
+  });
+
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if(this.readyState == 4){
+      if(this.status == 200){
+        console.log(JSON.parse(this.responseText));
+        var messages = JSON.parse(this.responseText);
+
+        //Decrypt messages
+        messages.forEach((item, i) => {
+          var decryptedJSON = cryptoTools.decryptData(vault.key, item);
+          console.log(decryptedJSON);
+          var message = JSON.parse(decryptedJSON);
+          if(typeof message.sender === 'undefined'){
+            message.type = MessageType.Anonymous;
+          } else if(typeof message.signature === 'undefined'){
+            message.type = MessageType.NotSigned
+          } else {
+            message.type = MessageType.Signed;
+          }
+          messages[i] = message;
+        });
+        if(!newMessage) messages.reverse();
+        messages.forEach((message) => {
+          showMessage(message, newMessage);
+        });
+        if(newMessage){
+          newMessageIndex += messages.length;
+        } else {
+          oldMessageIndex -= messages.length;
+        }
+        if(messages.length > 0){
+        } else {
+        }
+      } else {
+      }
+    waitingForMessages = false;
+    }
+  };
+  xhr.open('POST', '/message/get', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  var req = {
+    codename: vault.codename,
+    accessToken: vault.accessToken,
+  };
+  if(newMessage){
+    req.offset = newMessageIndex;
+    req.count = messagesChunk;
+  } else {
+    req.offset = oldMessageIndex - messagesChunk;
+    req.count = messagesChunk;
+    if(req.offset < 0){
+      req.count += req.offset;
+      req.offset = 0;
+    }
+  }
+  if(req.count > 0){
+    if(waitingForMessages){
+      console.log("get request blocked");
+       return;
+     }
+    waitingForMessages = true;
+    xhr.send(JSON.stringify(req));
+  }
+}
+
+function onScrollMessages(){
+  if(typeof openedVault === 'undefined'){
+    return;
+  }
+  if(openedVault == null){
+    return;
+  }
+  var newTrigger = document.getElementById('new-messages-load-trigger');
+  var parentBounding = newTrigger.parentNode.getBoundingClientRect();
+  if(loadNewerOrOlder){
+  var bounding = newTrigger.getBoundingClientRect();
+  if(bounding.top <= parentBounding.bottom){
+    getMessages(true);
+
+  }
+} else {
+  var oldTrigger = document.getElementById('old-messages-load-trigger');
+  var bounding = oldTrigger.getBoundingClientRect();
+  if(bounding.bottom >= parentBounding.top){
+    getMessages(false);
+  }
+}
+  loadNewerOrOlder = !loadNewerOrOlder;
 }
 
 function hideError(){

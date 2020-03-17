@@ -32,21 +32,22 @@ app.post('/user/create', async (req, res) => {
         res.end();
         reject();
       }
-      if(!req.body.name){
+      if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No name provided.");
         res.end();
         reject();
       }
-      if(!req.body.rsa){
+      if(typeof req.body.rsa === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No RSA keypair provided.");
         res.end();
         reject();
       }
-      if(!req.body.rsa.public || !req.body.rsa.private){
+      if(typeof req.body.rsa.public === 'undefined' ||
+        typeof req.body.rsa.private === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("RSA keypair incomplete.");
@@ -266,21 +267,21 @@ app.post('/vault/create', async (req, res) => {
         res.end();
         reject();
       }
-      if(!req.body.codename){
+      if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No codename provided.");
         res.end();
         reject();
       }
-      if(!req.body.name){
+      if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No name provided.");
         res.end();
         reject();
       }
-      if(!req.body.keys){
+      if(typeof req.body.keys === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No keys provided.");
@@ -295,14 +296,14 @@ app.post('/vault/create', async (req, res) => {
             res.end();
             reject();
           }
-          if(!key.user){
+          if(typeof key.user === 'undefined'){
             res.statusCode = 400;
             res.setHeader('Content-Type', 'text/plain');
             res.write("No user provided for one or more keys.");
             res.end();
             reject();
           }
-          if(!key.key){
+          if(typeof key.key === 'undefined'){
             res.statusCode = 400;
             res.setHeader('Content-Type', 'text/plain');
             res.write("No key provided for one or more keys.");
@@ -419,14 +420,14 @@ app.post('/vault/get', async (req, res) => {
         res.end();
         reject();
       }
-      if(!req.body.codename){
+      if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No codename provided.");
         res.end();
         reject();
       }
-      if(!req.body.accessToken){
+      if(typeof req.body.accessToken === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No access token provided.");
@@ -459,9 +460,13 @@ app.post('/vault/get', async (req, res) => {
 
     function getVault(db, params){
       return new Promise((resolve, reject) => {
-        var query = { codename: params.codename, accessToken: params.accessToken };
-        var projection = {_id: 0};
-        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
+        var pipeline = [
+          {'$match': {codename: params.codename, accessToken: params.accessToken}},
+          {'$project': {codename: 1, name: 1, keys: 1, messagesCount: {$size: "$messages"}}},
+          {'$project': {_id: 0, messages:0}}
+        ];
+        db.collection('vaults').aggregate(pipeline, (err, dbres) =>{
+          dbres.forEach((v) => {
           if(err){
             res.statusCode = 500;
             res.setHeader('Content-Type', 'text/plain');
@@ -469,7 +474,7 @@ app.post('/vault/get', async (req, res) => {
             res.end();
             reject();
           }
-          if(dbres.length != 1){
+          if(!v){
             res.statusCode = 400;
             res.setHeader('Content-Type', 'text/plain');
             res.write("Vault does not exist.");
@@ -477,9 +482,10 @@ app.post('/vault/get', async (req, res) => {
             reject();
           } else {
             //Do not send access token to user
-            delete dbres[0].accessToken;
-            resolve(dbres[0]);
+            delete v.accessToken;
+            resolve(v);
           }
+        });
         });
       });
     }
@@ -515,21 +521,21 @@ app.post('/message/send', async (req, res) => {
         res.end();
         reject();
       }
-      if(!req.body.codename){
+      if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No codename provided.");
         res.end();
         reject();
       }
-      if(!req.body.accessToken){
+      if(typeof req.body.accessToken === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No access token provided.");
         res.end();
         reject();
       }
-      if(!req.body.message){
+      if(typeof req.body.message === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write("No message provided.");
@@ -596,6 +602,112 @@ app.post('/message/send', async (req, res) => {
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/plain');
+    res.end();
+});
+
+app.post('/message/get', async (req, res) => {
+  function validate(){
+    return new Promise((resolve, reject) => {
+      if(Object.keys(req.body).length > 4){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Too many arguments provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.codename === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No codename provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.accessToken === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No access token provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.offset === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No offset provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.count === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No count provided.");
+        res.end();
+        reject();
+      }
+      resolve();
+    });
+  }
+
+  function connectToDB(){
+    return new Promise((resolve, reject) => {
+      mongo.connect(url,
+        {
+          useNewUrlParser: true,
+          useUnifiedTopology: true
+        },
+        (err, conn) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB connecting error.");
+            res.end();
+            reject();
+          }
+          resolve(conn);
+        });
+      });
+    }
+
+    function getMessages(db, params){
+      return new Promise((resolve, reject) => {
+        var query = {
+          codename: params.codename,
+          accessToken: params.accessToken
+          };
+        var projection = {_id: 0, messages: {$slice: [params.offset, params.count]}};
+        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB lookup error.");
+            res.end();
+            reject();
+          }
+          if(typeof dbres === 'undefined'){
+            resolve({});
+          } else if(dbres.length != 1){
+            resolve({});
+          } else {
+            resolve(dbres[0].messages);
+          }
+        });
+      });
+    }
+
+    var messages;
+    try {
+      await validate();
+      var conn = await connectToDB();
+      var db = conn.db('vault');
+      messages = await getMessages(db, req.body);
+      conn.close();
+    } catch (err){
+      if(conn) conn.close();
+      return;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.write(JSON.stringify(messages));
     res.end();
 });
 
