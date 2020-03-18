@@ -74,8 +74,10 @@ function listVaults(){
       Array.from(oldVaults).forEach((item) => {
         item.remove();
       });
-      vaults = user.vaults;
+      rawVaults = user.vaults;
+      vaults = {};
       user.vaults.forEach((vault) => {
+        vaults[vault.codename] = vault;
         var clonedNode = template.cloneNode(true);
         clonedNode.style.display = "";
         clonedNode.classList.add('sidebar-item-cloned');
@@ -101,7 +103,7 @@ function unlockVault(codename) {
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
     .innerHTML = "Unlocking...";
   saveRSA('unlock vault', () => {
-    var data = vaults.find(x => x.codename == codename);
+    var data = vaults[codename];
     authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
       if(status != 200){
         throwError("Failed to get vault data.");
@@ -127,13 +129,12 @@ function unlockVault(codename) {
       console.log('Decrypting vault name');
       vault.name = cryptoTools.decryptData(decryptedVaultKey, vault.name);
       console.log('Vault name is ' + vault.name);
-      vaults.forEach((v, i) => {
-        if(v.codename == vault.codename){
+      var v = vaults[vault.codename];
+        if(v){
           var accessToken = v.accessToken;
-          vaults[i] = vault;
-          vaults[i].accessToken = accessToken;
+          vaults[vault.codename] = vault;
+          vaults[vault.codename].accessToken = accessToken;
         }
-      });
       forgetRSA();
 
       var sidebar = document.getElementById('sidebar-item-' + vault.codename);
@@ -156,15 +157,11 @@ function unlockVault(codename) {
 }
 
 function lockVault(codename){
-  vaults.forEach((v, i) => {
-    if(v.codename == codename){
       var lockedVault = {
         codename: v.codename,
         accessToken: v.accessToken
       };
-      vaults[i] = lockedVault;
-    }
-  });
+      vaults[codename] = lockedVault;
 
   var sidebar = document.getElementById('sidebar-item-' + codename);
   //Hide name in sidebar
@@ -187,8 +184,7 @@ function lockVault(codename){
 
 function openVault(codename){
   openedVault = codename;
-  vaults.forEach((v, i) => {
-    if(v.codename == codename){
+  var v = vaults[codename];
       if(!v.name){
         unlockVault(codename);
       } else {
@@ -206,8 +202,6 @@ function openVault(codename){
         switchSection(0);
         clearMessages();
       }
-    }
-  });
 }
 
 function closeVault(){
@@ -415,13 +409,7 @@ function throwError(err){
 }
 
 function getOpenVault(){
-  var vault;
-  vaults.forEach((v, i) => {
-    if(v.codename == openedVault){
-      vault = v;
-    }
-  });
-  return vault;
+  return vaults[openedVault];
 }
 ///XHR and auth overlay
 var decryptedRSA;
