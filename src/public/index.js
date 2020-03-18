@@ -101,14 +101,14 @@ function unlockVault(codename) {
   console.log('Decrypting vault ' + name);
   var sidebar = document.getElementById('sidebar-item-' + codename);
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-    .innerHTML = "Unlocking...";
+  .innerHTML = "Unlocking...";
   saveRSA('unlock vault', () => {
     var data = vaults[codename];
     authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
       if(status != 200){
         throwError("Failed to get vault data.");
         sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-          .innerHTML = "Unlock";
+        .innerHTML = "Unlock";
         forgetRSA();
         return;
       }
@@ -118,7 +118,7 @@ function unlockVault(codename) {
       if(!keyObj){
         throwError('Vault has no key for user ' + storedName);
         sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-          .innerHTML = "Unlock";
+        .innerHTML = "Unlock";
         forgetRSA();
         return;
       }
@@ -130,26 +130,26 @@ function unlockVault(codename) {
       vault.name = cryptoTools.decryptData(decryptedVaultKey, vault.name);
       console.log('Vault name is ' + vault.name);
       var v = vaults[vault.codename];
-        if(v){
-          var accessToken = v.accessToken;
-          vaults[vault.codename] = vault;
-          vaults[vault.codename].accessToken = accessToken;
-        }
+      if(v){
+        var accessToken = v.accessToken;
+        vaults[vault.codename] = vault;
+        vaults[vault.codename].accessToken = accessToken;
+      }
       forgetRSA();
 
       var sidebar = document.getElementById('sidebar-item-' + vault.codename);
       //Display name in sidebar
       sidebar.getElementsByClassName('sidebar-item-name')[0]
-        .innerHTML = vault.name;
+      .innerHTML = vault.name;
 
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-        .onclick = function(e){
-          e.stopPropagation();
-          var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
-          lockVault(codename);
+      .onclick = function(e){
+        e.stopPropagation();
+        var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+        lockVault(codename);
       };
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-        .innerHTML = "Lock";
+      .innerHTML = "Lock";
 
       openVault(codename);
     }, true);
@@ -157,25 +157,25 @@ function unlockVault(codename) {
 }
 
 function lockVault(codename){
-      var lockedVault = {
-        codename: v.codename,
-        accessToken: v.accessToken
-      };
-      vaults[codename] = lockedVault;
+  var lockedVault = {
+    codename: v.codename,
+    accessToken: v.accessToken
+  };
+  vaults[codename] = lockedVault;
 
   var sidebar = document.getElementById('sidebar-item-' + codename);
   //Hide name in sidebar
   sidebar.getElementsByClassName('sidebar-item-name')[0]
-    .innerHTML = '[Locked]';
+  .innerHTML = '[Locked]';
 
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-    .onclick = function(e){
-      e.stopPropagation();
-      var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
-      unlockVault(codename);
+  .onclick = function(e){
+    e.stopPropagation();
+    var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+    unlockVault(codename);
   };
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
-    .innerHTML = "Unlock";
+  .innerHTML = "Unlock";
 
   if(openedVault == codename){
     closeVault();
@@ -185,23 +185,41 @@ function lockVault(codename){
 function openVault(codename){
   openedVault = codename;
   var v = vaults[codename];
-      if(!v.name){
-        unlockVault(codename);
-      } else {
-        newMessageIndex = v.messagesCount;
-        oldMessageIndex = v.messagesCount;
-        waitingForMessages = false;
-        document.getElementById('vault-content').style.display = "";
-        document.getElementById('create-form').style.display = "none";
-        Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
-          item.innerHTML = vault.name;
-        });
-        Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
-          item.innerHTML = vault.codename;
-        });
-        switchSection(0);
-        clearMessages();
-      }
+  if(typeof v.name === 'undefined'){
+    unlockVault(codename);
+  } else {
+    newMessageIndex = v.messagesCount;
+    oldMessageIndex = v.messagesCount;
+    waitingForMessages = false;
+    document.getElementById('vault-content').style.display = "";
+    document.getElementById('create-form').style.display = "none";
+    Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
+      item.innerHTML = vault.name;
+    });
+    Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
+      item.innerHTML = vault.codename;
+    });
+
+    var memberTemplate = document.getElementById('vault-member-template');
+    //Clear member list
+    Array.from(
+      memberTemplate.parentNode.getElementsByClassName('vault-member-generated')
+    ).forEach((elem) => {
+      elem.remove();
+    });
+
+    //Add member
+    v.keys.forEach((key) => {
+      var cloned = memberTemplate.cloneNode(true);
+      cloned.classList.add('vault-member-generated');
+      cloned.style.display = "";
+      cloned.getElementsByClassName('ins-member-name')[0].innerHTML = key.user;
+      cloned.getElementsByClassName('ins-member-key')[0].value = key.key;
+      memberTemplate.parentNode.appendChild(cloned);
+    });
+    switchSection(0);
+    clearMessages();
+  }
 }
 
 function closeVault(){
@@ -228,14 +246,14 @@ function sendMessage(type) {
 
   switch(type){
     case MessageType.Anonymous:
-      break;
+    break;
     case MessageType.NotSigned:
-      message.sender = storedName;
-      break;
+    message.sender = storedName;
+    break;
     case MessageType.Signed:
-      message.sender = storedName;
-      message.signature = cryptoTools.sign(decryptedRSA, message.content + 'T' + message.timestamp);
-      break;
+    message.sender = storedName;
+    message.signature = cryptoTools.sign(decryptedRSA, message.content + 'T' + message.timestamp);
+    break;
   }
 
   var vault = getOpenVault();
@@ -271,17 +289,17 @@ function showMessage(message, newMessage){
   cloned.getElementsByClassName('message-text')[0].innerHTML = message.content;
   switch(message.type){
     case MessageType.Anonymous:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
-      cloned.getElementsByClassName('message-sender')[0].innerHTML = '[Anonymous]';
-      break;
+    cloned.getElementsByClassName('message-icon')[0].src = 'img/anon.svg';
+    cloned.getElementsByClassName('message-sender')[0].innerHTML = '[Anonymous]';
+    break;
     case MessageType.NotSigned:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
-      cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
-      break;
+    cloned.getElementsByClassName('message-icon')[0].src = 'img/warn.svg';
+    cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
+    break;
     case MessageType.Signed:
-      cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
-      cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
-      break;
+    cloned.getElementsByClassName('message-icon')[0].src = 'img/signed.svg';
+    cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
+    break;
   }
   cloned.classList.add('message-generated');
   if(newMessage){
@@ -343,7 +361,7 @@ function getMessages(newMessage){
         }
       } else {
       }
-    waitingForMessages = false;
+      waitingForMessages = false;
     }
   };
   xhr.open('POST', '/message/get', true);
@@ -366,8 +384,8 @@ function getMessages(newMessage){
   if(req.count > 0){
     if(waitingForMessages){
       console.log("get request blocked");
-       return;
-     }
+      return;
+    }
     waitingForMessages = true;
     xhr.send(JSON.stringify(req));
   }
@@ -383,18 +401,18 @@ function onScrollMessages(){
   var newTrigger = document.getElementById('new-messages-load-trigger');
   var parentBounding = newTrigger.parentNode.getBoundingClientRect();
   if(loadNewerOrOlder){
-  var bounding = newTrigger.getBoundingClientRect();
-  if(bounding.top <= parentBounding.bottom){
-    getMessages(true);
+    var bounding = newTrigger.getBoundingClientRect();
+    if(bounding.top <= parentBounding.bottom){
+      getMessages(true);
 
+    }
+  } else {
+    var oldTrigger = document.getElementById('old-messages-load-trigger');
+    var bounding = oldTrigger.getBoundingClientRect();
+    if(bounding.bottom >= parentBounding.top){
+      getMessages(false);
+    }
   }
-} else {
-  var oldTrigger = document.getElementById('old-messages-load-trigger');
-  var bounding = oldTrigger.getBoundingClientRect();
-  if(bounding.bottom >= parentBounding.top){
-    getMessages(false);
-  }
-}
   loadNewerOrOlder = !loadNewerOrOlder;
 }
 

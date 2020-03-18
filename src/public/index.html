@@ -91,7 +91,18 @@
       <br>
       <small>This key is used for encrypting all data in this vault. Don't show it to anyone! Hover to show.</small>
       <br>
-      //TODO: Member management
+      <h2>Members</h2>
+      <div>
+        <div class="row font-weight-bold">
+          <div class="col-6">Name</div>
+          <div class="col-6">Encrypted key</div>
+        </div>
+        <div id="vault-member-template" class="row my-3" style="display: none;">
+          <div class="col-6"><span class="value ins-member-name">Name</span></div>
+          <div class="col-6">
+            <input type="text" class="form-control ins-member-key" readonly>
+          </div>
+        </div>
       </div>
   </div>
   </div>

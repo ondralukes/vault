@@ -27,6 +27,13 @@ body {
   color: lightgrey;
 }
 
+.form-control[readonly]{
+  width:100%;
+  background-color: #535353;
+  border-color: #535353;
+  color: lightgrey;
+}
+
 .form-control:focus {
   width:100%;
   background-color: #535353;
@@ -172,5 +179,6 @@ overflow-wrap: anywhere;
   font-family: monospace;
   padding-left: 5pt;
   padding-right: 5pt;
-  border-radius: 5pt
+  border-radius: 5pt;
+  word-wrap: break-word;
 }
