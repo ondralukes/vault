@@ -595,7 +595,6 @@ app.post('/vault/member/add', async (req, res) => {
             }
           }
         };
-        console.log(query);
         var update = {
           $push:
           {
@@ -630,7 +629,6 @@ app.post('/vault/member/add', async (req, res) => {
       await pushToDB(db, req.body);
       conn.close();
     } catch (err){
-      console.log(err);
       if(conn) conn.close();
       return;
     }
@@ -727,7 +725,6 @@ app.post('/message/send', async (req, res) => {
       await pushToDB(db, req.body);
       conn.close();
     } catch (err){
-      console.log(err);
       if(conn) conn.close();
       return;
     }
