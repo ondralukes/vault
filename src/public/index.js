@@ -157,6 +157,7 @@ function unlockVault(codename) {
 }
 
 function lockVault(codename){
+  var v = getOpenVault();
   var lockedVault = {
     codename: v.codename,
     accessToken: v.accessToken
@@ -215,7 +216,7 @@ function openVault(codename){
       cloned.style.display = "";
       cloned.getElementsByClassName('ins-member-name')[0].innerHTML = key.user;
       cloned.getElementsByClassName('ins-member-key')[0].value = key.key;
-      memberTemplate.parentNode.appendChild(cloned);
+      memberTemplate.parentNode.insertBefore(cloned, memberTemplate.nextSibling);
     });
     switchSection(0);
     clearMessages();
@@ -428,6 +429,58 @@ function throwError(err){
 
 function getOpenVault(){
   return vaults[openedVault];
+}
+
+function addUser(){
+  var username = document.getElementById('new-member-name').value;
+  getUserPublic(username, (statusCode, resp) => {
+    if(statusCode == 200){
+      console.log('Encrypting key for user ' + username);
+      var encryptedKey = cryptoTools.encryptKey(resp.rsa, getOpenVault().key);
+      var key =
+      {
+        user: username,
+        key: encryptedKey
+      };
+      var req = {
+        key: key,
+        codename: getOpenVault().codename
+      };
+      authenticatedRequest('add key to vault', '/vault/member/add', req, (response, status) => {
+        if(status != 200){
+          throwError(response);
+          forgetRSA();
+        } else {
+          //Re-unlock vault
+          var vault = getOpenVault();
+          lockVault(vault.codename);
+          unlockVault(vault.codename);
+        }
+      }, true);
+    } else {
+      throwError(resp);
+    }
+  });
+}
+
+function getUserPublic(name, callback){
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if(this.readyState == 4){
+      if(this.status == 200){
+        callback(this.status, JSON.parse(this.responseText));
+      } else {
+        callback(this.status, this.responseText);
+      }
+    }
+  };
+  xhr.open('POST', '/user/get/public', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(
+    {
+      name: name
+    }
+  ));
 }
 ///XHR and auth overlay
 var decryptedRSA;

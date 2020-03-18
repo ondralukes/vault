@@ -506,6 +506,140 @@ app.post('/vault/get', async (req, res) => {
     res.end();
 });
 
+app.post('/vault/member/add', async (req, res) => {
+  //Save user before the session is destroyed in auth()
+  var username = req.session.user.name;
+
+  var verified = await auth(req,res);
+  if(!verified){
+    return;
+  }
+  delete req.body.encryptedToken;
+
+  function validate(){
+    return new Promise((resolve, reject) => {
+      if(Object.keys(req.body).length > 2){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Too many arguments provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.codename === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No codename provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.key === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No key provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.key.user === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No key user provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.key.key === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No key key provided.");
+        res.end();
+        reject();
+      }
+      resolve();
+    });
+  }
+
+  function connectToDB(){
+    return new Promise((resolve, reject) => {
+      mongo.connect(url,
+        {
+          useNewUrlParser: true,
+          useUnifiedTopology: true
+        },
+        (err, conn) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB connecting error.");
+            res.end();
+            reject();
+          }
+          resolve(conn);
+        });
+      });
+    }
+
+    function pushToDB(db, params){
+      return new Promise((resolve, reject) => {
+        var query = {
+          codename: params.codename,
+          keys:
+          {
+            $elemMatch:
+            {
+              user: params.user
+            },
+            $not: {
+              $elemMatch:
+              {
+                user: params.key.user
+              }
+            }
+          }
+        };
+        console.log(query);
+        var update = {
+          $push:
+          {
+            keys: params.key
+          }
+        };
+        db.collection('vaults').updateOne(query, update, (err, dbres) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("Failed to push to DB.");
+            res.end();
+            reject();
+          }
+          if(dbres.result.n != 1){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("Query did not return one vault.");
+            res.end();
+            reject();
+          }
+          resolve();
+        });
+      });
+    }
+
+    try {
+      await validate();
+      var conn = await connectToDB();
+      var db = conn.db('vault');
+      req.body.user = username;
+      await pushToDB(db, req.body);
+      conn.close();
+    } catch (err){
+      console.log(err);
+      if(conn) conn.close();
+      return;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain');
+    res.end();
+});
+
 app.post('/message/send', async (req, res) => {
   //Do not require auth, request is secured by access token.
   delete req.body.encryptedToken;
@@ -776,6 +910,113 @@ app.post('/user/get/private', async (req, res) => {
             reject();
           } else {
             user = dbres[0];
+            resolve(user);
+          }
+        });
+      });
+    }
+
+    function getUserVaults(db, name){
+      return new Promise((resolve, reject) => {
+        var user = { name: name };
+        var query = { keys: {$elemMatch: {user: user.name}}};
+        var projection = {_id: 0, accessToken: 1, codename: 1};
+        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB lookup error.");
+            res.end();
+            reject();
+          }
+          resolve(dbres);
+        });
+      });
+    }
+});
+
+app.post('/user/get/public', async (req, res) => {
+
+  try {
+    await validate();
+    var conn = await connectToDB();
+    var db = conn.db('vault');
+    user = await getUser(db, req.body.name);
+  } catch (err){
+    if(conn) conn.close();
+    return;
+  }
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/json');
+  res.write(JSON.stringify(user));
+  res.end();
+
+  function validate(){
+    return new Promise((resolve, reject) => {
+      if(Object.keys(req.body).length > 1){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("Too many arguments provided.");
+        res.end();
+        reject();
+      }
+      if(typeof req.body.name === 'undefined'){
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'text/plain');
+        res.write("No name provided.");
+        res.end();
+        reject();
+      }
+      resolve();
+    });
+  }
+
+  function connectToDB(){
+    return new Promise((resolve, reject) => {
+      mongo.connect(url,
+        {
+          useNewUrlParser: true,
+          useUnifiedTopology: true
+        },
+        (err, conn) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB connecting error.");
+            res.end();
+            reject();
+          }
+          resolve(conn);
+        });
+      });
+    }
+
+    function getUser(db, name){
+      return new Promise((resolve, reject) => {
+        var user = { name: name };
+        var query = { name: user.name };
+        db.collection('users').find(query).toArray((err, dbres) => {
+          if(err){
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("DB lookup error.");
+            res.end();
+            reject();
+          }
+          if(dbres.length != 1){
+            res.statusCode = 400;
+            res.setHeader('Content-Type', 'text/plain');
+            res.write("User does not exist.");
+            res.end();
+            reject();
+          } else {
+            var user = {
+              name: dbres[0].name,
+              rsa : {
+                public: dbres[0].rsa.public
+              }
+            };
             resolve(user);
           }
         });
