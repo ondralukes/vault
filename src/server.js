@@ -5,7 +5,7 @@ const session = require('express-session');
 const RSA = require('node-rsa');
 
 const mongo = mongodb.MongoClient;
-const url = 'mongodb://localhost:27017/vault';
+const url = 'mongodb://vaultdb:27017/vault';
 
 var app = express();
 
