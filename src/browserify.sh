@@ -1,2 +1,3 @@
 #!/bin/bash
-browserify -s cryptoTools -o public/index-crypto-browserified.js public/index-crypto.js
+echo "/* eslint-disable */" > public/index-crypto-browserified.js
+browserify -s cryptoTools public/index-crypto.js >> public/index-crypto-browserified.js

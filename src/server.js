@@ -116,8 +116,7 @@ app.post('/user/create', async (req, res) => {
 
     function insert(db, user){
       return new Promise((resolve, reject) => {
-        var query = { name: user.name };
-        db.collection('users').insertOne(user,(err, dbres) => {
+        db.collection('users').insertOne(user,(err) => {
           if(err){
             res.statusCode = 500;
             res.setHeader('Content-Type', 'text/plain');
@@ -374,7 +373,7 @@ app.post('/vault/create', async (req, res) => {
 
   function insert(db, vault){
     return new Promise((resolve, reject) => {
-      db.collection('vaults').insertOne(vault,(err, dbres) => {
+      db.collection('vaults').insertOne(vault,(err) => {
         if(err){
           res.statusCode = 500;
           res.setHeader('Content-Type', 'text/plain');
@@ -705,7 +704,7 @@ app.post('/message/send', async (req, res) => {
             messages: params.message
           }
         };
-        db.collection('vaults').updateOne(query, update, (err, dbres) => {
+        db.collection('vaults').updateOne(query, update, (err) => {
           if(err){
             res.statusCode = 500;
             res.setHeader('Content-Type', 'text/plain');
@@ -933,7 +932,7 @@ app.post('/user/get/private', async (req, res) => {
 });
 
 app.post('/user/get/public', async (req, res) => {
-
+  var user;
   try {
     await validate();
     var conn = await connectToDB();
@@ -1019,24 +1018,6 @@ app.post('/user/get/public', async (req, res) => {
         });
       });
     }
-
-    function getUserVaults(db, name){
-      return new Promise((resolve, reject) => {
-        var user = { name: name };
-        var query = { keys: {$elemMatch: {user: user.name}}};
-        var projection = {_id: 0, accessToken: 1, codename: 1};
-        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
-          }
-          resolve(dbres);
-        });
-      });
-    }
 });
 
 async function auth(req, res){
@@ -1088,4 +1069,4 @@ async function auth(req, res){
   }
 }
 
-var server = app.listen(8080);
+app.listen(8080);

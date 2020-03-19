@@ -4,11 +4,10 @@ const messagesChunk = 32;
 
 var vaults;
 var openedVault;
-var messageGetInterval;
 
 function init(){
   listVaults();
-  messageGetInterval = setInterval(function(){onScrollMessages();},1000);
+  setInterval(function(){onScrollMessages();},1000);
 }
 
 function switchSection(sec){
@@ -74,7 +73,6 @@ function listVaults(){
       Array.from(oldVaults).forEach((item) => {
         item.remove();
       });
-      rawVaults = user.vaults;
       var oldVaults = vaults || {};
       vaults = {};
       user.vaults.forEach((vault) => {
@@ -133,7 +131,7 @@ function unlockVault(codename, update, open) {
         forgetRSA();
         return;
       }
-      vault = JSON.parse(response);
+      var vault = JSON.parse(response);
       console.log('Decrypting vault key');
       var keyObj = vault.keys.find(x => x.user == storedName);
       if(!keyObj){
@@ -225,10 +223,10 @@ function openVault(codename){
 function updateVaultInfo(codename){
   var v = vaults[codename];
   Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
-    item.innerHTML = vault.name;
+    item.innerHTML = v.name;
   });
   Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
-    item.innerHTML = vault.codename;
+    item.innerHTML = v.codename;
   });
 
   var memberTemplate = document.getElementById('vault-member-template');
@@ -385,10 +383,6 @@ function getMessages(newMessage){
         } else {
           oldMessageIndex -= messages.length;
         }
-        if(messages.length > 0){
-        } else {
-        }
-      } else {
       }
       waitingForMessages = false;
     }
@@ -429,15 +423,16 @@ function onScrollMessages(){
   }
   var newTrigger = document.getElementById('new-messages-load-trigger');
   var parentBounding = newTrigger.parentNode.getBoundingClientRect();
+  var bounding;
   if(loadNewerOrOlder){
-    var bounding = newTrigger.getBoundingClientRect();
+    bounding = newTrigger.getBoundingClientRect();
     if(bounding.top <= parentBounding.bottom){
       getMessages(true);
 
     }
   } else {
     var oldTrigger = document.getElementById('old-messages-load-trigger');
-    var bounding = oldTrigger.getBoundingClientRect();
+    bounding = oldTrigger.getBoundingClientRect();
     if(bounding.bottom >= parentBounding.top){
       getMessages(false);
     }
@@ -548,7 +543,7 @@ function forgetRSA(){
 }
 
 function saveRSA(message, callback){
-  authenticatedRequest(message, '/verifyToken', {}, function(response){
+  authenticatedRequest(message, '/verifyToken', {}, function(){
     callback();
   }, true);
 }
