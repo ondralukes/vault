@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "author": "ondralukes <mail@ondralukes.cz>",
   "main": "server.js",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "aes-js": "^3.1.2",
     "express": "^4.17.1",
@@ -10,5 +13,9 @@
     "mongodb": "^3.5.5",
     "node-rsa": "^1.0.7",
     "sha.js": "^2.4.11"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0",
+    "supertest": "^4.0.2"
   }
 }
