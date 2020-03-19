@@ -75,8 +75,14 @@ function listVaults(){
         item.remove();
       });
       rawVaults = user.vaults;
+      var oldVaults = vaults || {};
       vaults = {};
       user.vaults.forEach((vault) => {
+
+        //Do not overwrite already listed vaults (it would lock them)
+        if(typeof oldVaults[vault.codename] !== 'undefined'){
+          vault = oldVaults[vault.codename];
+        }
         vaults[vault.codename] = vault;
         var clonedNode = template.cloneNode(true);
         clonedNode.style.display = "";
@@ -91,19 +97,34 @@ function listVaults(){
         clonedNode.addEventListener('click', function(){
           openVault(vault.codename);
         }, false);
+        if(typeof vault.key !== 'undefined'){
+          clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+          .onclick = function(e){
+            e.stopPropagation();
+            var codename = e.target.parentNode.id.substring('sidebar-item-'.length);
+            lockVault(codename);
+          };
+          clonedNode.getElementsByClassName('sidebar-item-decrypt-btn')[0]
+          .innerHTML = "Lock";
+        }
         template.parentNode.insertBefore(clonedNode, template.parentNode.firstChild);
       });
     }
   }, false);
 }
 
-function unlockVault(codename) {
+function unlockVault(codename, update, open) {
+  if(typeof open === 'undefined') open = true;
+  if(typeof update === 'undefined') update = false;
   console.log('Decrypting vault ' + name);
   var sidebar = document.getElementById('sidebar-item-' + codename);
   sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
   .innerHTML = "Unlocking...";
   saveRSA('unlock vault', () => {
-    var data = vaults[codename];
+    var data = {
+      codename: vaults[codename].codename,
+      accessToken: vaults[codename].accessToken
+    };
     authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
       if(status != 200){
         throwError("Failed to get vault data.");
@@ -151,13 +172,14 @@ function unlockVault(codename) {
       sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
       .innerHTML = "Lock";
 
-      openVault(codename);
+      if(open) openVault(codename);
+      if(update) updateVaultInfo(codename);
     }, true);
   });
 }
 
 function lockVault(codename){
-  var v = getOpenVault();
+  var v = vaults[codename];
   var lockedVault = {
     codename: v.codename,
     accessToken: v.accessToken
@@ -194,38 +216,44 @@ function openVault(codename){
     waitingForMessages = false;
     document.getElementById('vault-content').style.display = "";
     document.getElementById('create-form').style.display = "none";
-    Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
-      item.innerHTML = vault.name;
-    });
-    Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
-      item.innerHTML = vault.codename;
-    });
-
-    var memberTemplate = document.getElementById('vault-member-template');
-    //Clear member list
-    Array.from(
-      memberTemplate.parentNode.getElementsByClassName('vault-member-generated')
-    ).forEach((elem) => {
-      elem.remove();
-    });
-
-    //Add member
-    v.keys.forEach((key) => {
-      var cloned = memberTemplate.cloneNode(true);
-      cloned.classList.add('vault-member-generated');
-      cloned.style.display = "";
-      cloned.getElementsByClassName('ins-member-name')[0].innerHTML = key.user;
-      cloned.getElementsByClassName('ins-member-key')[0].value = key.key;
-      memberTemplate.parentNode.insertBefore(cloned, memberTemplate.nextSibling);
-    });
+    updateVaultInfo(codename);
     switchSection(0);
     clearMessages();
   }
 }
 
+function updateVaultInfo(codename){
+  var v = vaults[codename];
+  Array.from(document.getElementsByClassName('vault-name-ins')).forEach((item) => {
+    item.innerHTML = vault.name;
+  });
+  Array.from(document.getElementsByClassName('vault-codename-ins')).forEach((item) => {
+    item.innerHTML = vault.codename;
+  });
+
+  var memberTemplate = document.getElementById('vault-member-template');
+  //Clear member list
+  Array.from(
+    memberTemplate.parentNode.getElementsByClassName('vault-member-generated')
+  ).forEach((elem) => {
+    elem.remove();
+  });
+
+  //Add member
+  v.keys.forEach((key) => {
+    var cloned = memberTemplate.cloneNode(true);
+    cloned.classList.add('vault-member-generated');
+    cloned.style.display = "";
+    cloned.getElementsByClassName('ins-member-name')[0].innerHTML = key.user;
+    cloned.getElementsByClassName('ins-member-key')[0].value = key.key;
+    memberTemplate.parentNode.insertBefore(cloned, memberTemplate.nextSibling);
+  });
+}
+
 function closeVault(){
   document.getElementById('vault-content').style.display = "none";
   document.getElementById('create-form').style.display = "";
+  document.getElementById('create-vault-result').innerHTML = "";
   openedVault = null;
 }
 
@@ -453,8 +481,7 @@ function addUser(){
         } else {
           //Re-unlock vault
           var vault = getOpenVault();
-          lockVault(vault.codename);
-          unlockVault(vault.codename);
+          unlockVault(vault.codename, true, false);
         }
       }, true);
     } else {
