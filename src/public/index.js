@@ -430,7 +430,7 @@ async function getMessages(newMessage){
 }
 
 function verifySignature(message){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     getUserPublic(message.sender, (status, response) => {
       if(status !== 200){
         resolve(false);
