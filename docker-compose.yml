@@ -12,5 +12,3 @@ services:
   vaultdb:
     image: mongo
     container_name: vaultdb
-    ports:
-      - "21017:27017"
