@@ -349,19 +349,19 @@ var newMessageIndex;
 var loadNewerOrOlder = true;
 var waitingForMessages = false;
 
-function getMessages(newMessage){
+async function getMessages(newMessage){
 
   var vault = getOpenVault();
 
   var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
+  xhr.onreadystatechange = async function() {
     if(this.readyState == 4){
       if(this.status == 200){
         console.log(JSON.parse(this.responseText));
         var messages = JSON.parse(this.responseText);
 
         //Decrypt messages
-        messages.forEach((item, i) => {
+        await asyncForEach(messages, async (item, i) => {
           var decryptedJSON = cryptoTools.decryptData(vault.key, item);
           console.log(decryptedJSON);
           var message = JSON.parse(decryptedJSON);
@@ -371,6 +371,21 @@ function getMessages(newMessage){
             message.type = MessageType.NotSigned
           } else {
             message.type = MessageType.Signed;
+          }
+
+          //Check message legnth
+          if(message.content.length !== message.length){
+            message.content = '[Corrupted]';
+            message.type = MessageType.NotSigned;
+          }
+          //Check message signature (if provided)
+          if(message.type === MessageType.Signed){
+            var signatureValid = await verifySignature(message);
+            if(!signatureValid){
+              message.content = '[Corrupted]';
+              message.sender = '[Corrupted]';
+              message.type = MessageType.NotSigned;
+            }
           }
           messages[i] = message;
         });
@@ -414,6 +429,19 @@ function getMessages(newMessage){
   }
 }
 
+function verifySignature(message){
+  return new Promise((resolve) => {
+    getUserPublic(message.sender, (status, response) => {
+      if(status !== 200){
+        resolve(false);
+      }
+      var data = message.content + 'T' + message.timestamp;
+      var signatureValid = cryptoTools.verify(response.rsa, data, message.signature);
+      resolve(signatureValid);
+    });
+  });
+}
+
 function onScrollMessages(){
   if(typeof openedVault === 'undefined'){
     return;
@@ -426,14 +454,13 @@ function onScrollMessages(){
   var bounding;
   if(loadNewerOrOlder){
     bounding = newTrigger.getBoundingClientRect();
-    if(bounding.top <= parentBounding.bottom){
+    if(bounding.top <= parentBounding.bottom + 50){
       getMessages(true);
-
     }
   } else {
     var oldTrigger = document.getElementById('old-messages-load-trigger');
     bounding = oldTrigger.getBoundingClientRect();
-    if(bounding.bottom >= parentBounding.top){
+    if(bounding.bottom >= parentBounding.top - 50){
       getMessages(false);
     }
   }
@@ -656,4 +683,10 @@ function toHexString(byteArray) {
   return Array.from(byteArray, function(byte) {
     return ('0' + (byte & 0xFF).toString(16)).slice(-2);
   }).join('');
+}
+
+async function asyncForEach(arr, callback){
+  for(var i = 0;i < arr.length;i++){
+    await callback(arr[i], i);
+  }
 }

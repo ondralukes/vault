@@ -79,3 +79,8 @@ module.exports.sign = function(rsaKey, data){
   var rsa = new RSA(rsaKey.private);
   return rsa.sign(data, 'base64', 'utf8');
 }
+
+module.exports.verify = function(rsaKey, data, signature){
+  var rsa = new RSA(rsaKey.public);
+  return rsa.verify(data, signature, 'utf8', 'base64');
+}
