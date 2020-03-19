@@ -12,10 +12,10 @@ function init(){
 
 function switchSection(sec){
   Array.from(document.getElementsByClassName('messages-section')).forEach((item) => {
-    item.style.display = sec==0?'':'none';
+    item.style.display = sec===0?'':'none';
   });
   Array.from(document.getElementsByClassName('settings-section')).forEach((item) => {
-    item.style.display = sec==1?'':'none';
+    item.style.display = sec===1?'':'none';
   });
   Array.from(document.getElementsByClassName('section-btn')).forEach((item, i) => {
     if(sec == i){
