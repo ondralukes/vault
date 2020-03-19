@@ -1,0 +1,14 @@
+version: '3'
+services:
+  vault:
+    container_name: vault
+    depends_on:
+      - vaultdb
+    build: .
+    ports:
+      - "8080:8080"
+    links:
+      - "vaultdb"
+  vaultdb:
+    image: mongo
+    container_name: vaultdb
