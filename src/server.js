@@ -1063,9 +1063,10 @@ async function auth(req, res){
       res.setHeader('Content-Type', 'text/plain');
       res.write('Authentication failed.');
       res.end();
+      return false;
     }
   } catch (err){
-
+    return false;
   }
 }
 
