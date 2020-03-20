@@ -119,7 +119,7 @@ describe('Testing vaults', () => {
     .post('/user/get/private')
     .send({encryptedToken: encryptedToken});
     expect(res.statusCode).toEqual(200);
-    var data = JSON.parse(res.text);
+    data = JSON.parse(res.text);
     expect(data.rsa).toEqual(registerParams.rsa);
     expect(data.vaults).toHaveLength(1);
     lockedVault = data.vaults[0];
@@ -151,7 +151,7 @@ describe('Testing vaults', () => {
     .post('/vault/get')
     .send(req);
     expect(res.statusCode).toEqual(200);
-    var data = JSON.parse(res.text);
+    data = JSON.parse(res.text);
     expect(data.codename).toEqual(lockedVault.codename);
     expect(data.name).toBeDefined();
     expect(data.keys).toHaveLength(1);
@@ -164,18 +164,6 @@ describe('Testing vaults', () => {
 
 describe('Testing messages', () => {
   it('can send messages', async (done) => {
-    var res = await http
-    .post('/token')
-    .set('Accept', 'application/json')
-    .send(registerParams);
-
-    var data = JSON.parse(res.text);
-    expect(res.statusCode).toEqual(200);
-    expect(data.token).toBeDefined();
-    var token = data.token;
-    var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
-
     var message = {
       content: messageText,
       length: messageText.length,
@@ -190,23 +178,13 @@ describe('Testing messages', () => {
       accessToken: lockedVault.accessToken,
       message: encryptedMessage
     };
-    res = await http
+    var res = await http
     .post('/message/send')
     .send(req);
     expect(res.statusCode).toEqual(200);
     done();
   });
   it('can read messages', async (done) => {
-    var res = await http
-    .post('/token')
-    .set('Accept', 'application/json')
-    .send(registerParams);
-
-    var data = JSON.parse(res.text);
-    expect(res.statusCode).toEqual(200);
-    expect(data.token).toBeDefined();
-    var token = data.token;
-    var key = new RSA(userRsaPrivate);
 
     var req = {
       codename: lockedVault.codename,
@@ -215,11 +193,11 @@ describe('Testing messages', () => {
       count: 32
     };
 
-    res = await http
+    var res = await http
     .post('/message/get')
     .send(req);
     expect(res.statusCode).toEqual(200);
-    data = JSON.parse(res.text);
+    var data = JSON.parse(res.text);
     expect(data).toHaveLength(1);
     var encryptedMessage = data[0];
     var message = JSON.parse(decryptData(vaultKey, encryptedMessage));
