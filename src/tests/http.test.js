@@ -207,7 +207,6 @@ describe('Testing messages', () => {
     expect(data.token).toBeDefined();
     var token = data.token;
     var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
 
     var req = {
       codename: lockedVault.codename,
@@ -220,7 +219,7 @@ describe('Testing messages', () => {
     .post('/message/get')
     .send(req);
     expect(res.statusCode).toEqual(200);
-    var data = JSON.parse(res.text);
+    data = JSON.parse(res.text);
     expect(data).toHaveLength(1);
     var encryptedMessage = data[0];
     var message = JSON.parse(decryptData(vaultKey, encryptedMessage));
