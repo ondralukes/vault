@@ -3,7 +3,7 @@
 <head>
   <title>Vault</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="index.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -13,14 +13,32 @@
 </head>
 <body onload="init();">
   <div class="cont">
-    <div class="sidebar">
+    <div class="overlay text-center p-5" id="overlay" style="display: none;">
+      <h1>Authentication required.</h1>
+      <span>Authentication is required to <span id="overlay-message"></span>.</span>
+      <form onsubmit="authenticate(); return false;">
+        <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
+        <input class="form-control my-3" type="password" id="password" placeholder="Password">
+        <input type="submit" class="btn btn-primary" value="Authenticate">
+        <div class="my-2  first-login-only">or</div>
+        <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
+        <button onclick="cancelAuth();" class="btn btn-primary mt-2" type="button">Cancel</button>
+      </form>
+      <div class="my-3" id="overlay-result"></div>
+    </div>
+    <div class="overlay text-center p-5" id="error" style="display: none;">
+      <h1>Error.</h1>
+      <span id="error-message"></span>
+      <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
+    </div>
+    <div class="sidebar" id="sidebar">
       <div class="scrollable">
         <div class="sidebar-item" id="sidebar-item-template" style="display: none;">
           <div class="sidebar-item-name">[Locked]</div>
           <small class="sidebar-item-codename">Codename</small>
           <button type="button" class="btn btn-primary sidebar-item-decrypt-btn">Unlock</button>
         </div>
-        <div onclick="closeVault();" class="sidebar-item sidebar-item-create" id="sidebar-item-template">
+        <div onclick="closeVault(true);" class="sidebar-item sidebar-item-create" id="sidebar-item-template">
           Create new vault
       </div>
     </div>
@@ -31,12 +49,16 @@
       <input class="form-control mt-1" id="vault-name" type="text" placeholder="Vault name">
       <small class="form-text mb-2 text-left">Name is encrypted.</small>
       <button class="btn btn-primary mb-3 mt-1" type="button" onclick="createVault();">Create new vault</button>
+      <button class="btn btn-primary mb-3 mt-1 d-md-none" type="button" onclick="showSidebar();">Back</button>
       <div id="create-vault-result"></div>
     </div>
 
     <div id="vault-content" class="vault-content"  style="display: none;">
       <div class="infobar">
-        <h2 class="text-center vault-name-ins">Info</h2>
+        <div class="infobar-heading">
+        <button class="btn btn-inline d-md-none" onclick="showSidebar();">Back</button>
+        <h2 class="vault-name-ins infobar-heading-text">Info</h2>
+      </div>
         <div class="vault-sections">
           <div class="section-btn text-inverted" onclick="switchSection(0);">Messages</div>
           <div class="section-btn" onclick="switchSection(1);">Settings</div>
@@ -114,22 +136,6 @@
       </div>
   </div>
   </div>
-  <div class="overlay text-center p-5" id="overlay" style="display: none;">
-    <h1>Authentication required.</h1>
-    <span>Authentication is required to <span id="overlay-message"></span>.</span>
-    <form onsubmit="authenticate(); return false;">
-      <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
-      <input class="form-control my-3" type="password" id="password" placeholder="Password">
-      <input type="submit" class="btn btn-primary" value="Authenticate">
-      <div class="my-2  first-login-only">or</div>
-      <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
-    </form>
-    <div class="my-3" id="overlay-result"></div>
-  </div>
-  <div class="overlay text-center p-5" id="error" style="display: none;">
-    <h1>Error.</h1>
-    <span id="error-message"></span>
-    <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
-  </div>
+</div>
 </body>
 </html>

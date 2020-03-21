@@ -8,6 +8,31 @@ var openedVault;
 function init(){
   listVaults();
   setInterval(function(){onScrollMessages();},1000);
+  Array.from(document.getElementsByTagName('input')).forEach((input) => {
+    input.onfocusout = onLostFocus;
+  });
+
+  //Fix height on mobile devices (avoid problems with address bar)
+  if(window.innerWidth <= 768){
+    document.getElementsByClassName('cont')[0].style.height = window.innerHeight + 'px';
+  }
+}
+
+//only for small screens
+function hideSidebar(){
+  document.getElementById('sidebar').classList.add('sidebar-hidden');
+}
+
+//only for small screens
+function showSidebar(){
+  document.getElementById('sidebar').classList.remove('sidebar-hidden');
+}
+
+//scroll page back to normal (for mobile)
+function onLostFocus(){
+  if(document.body.scrollHeight > 0){
+    scrollTo(0, 0);
+  }
 }
 
 function switchSection(sec){
@@ -59,6 +84,7 @@ function createVault(){
         result.innerHTML = response;
       }
       listVaults();
+      showSidebar();
     }, true);
   });
 }
@@ -217,6 +243,7 @@ function openVault(codename){
     updateVaultInfo(codename);
     switchSection(0);
     clearMessages();
+    hideSidebar();
   }
 }
 
@@ -248,11 +275,13 @@ function updateVaultInfo(codename){
   });
 }
 
-function closeVault(){
+function closeVault(hide){
+  hide = hide || false;
   document.getElementById('vault-content').style.display = 'none';
   document.getElementById('create-form').style.display = '';
   document.getElementById('create-vault-result').innerHTML = '';
   openedVault = null;
+  if(hide) hideSidebar();
 }
 
 function sendSignedMessage(){
@@ -563,6 +592,10 @@ function authenticatedRequest(message, url, data, callback, keep){
   } else {
     authenticate();
   }
+}
+
+function cancelAuth(){
+  document.getElementById('overlay').style.display = 'none';
 }
 
 function forgetRSA(){
