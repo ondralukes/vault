@@ -1,3 +1,11 @@
+/* exported cancelAuth */
+/* exported hideError */
+/* exported sendSignedMessage */
+/* exported createVault */
+/* exported init */
+/* exported register */
+/* exported addUser */
+
 const MessageType = Object.freeze({Anonymous:1, NotSigned: 2, Signed: 3});
 
 const messagesChunk = 32;
