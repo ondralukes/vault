@@ -1,10 +1,4 @@
-/* exported cancelAuth */
-/* exported hideError */
-/* exported sendSignedMessage */
-/* exported createVault */
-/* exported init */
-/* exported register */
-/* exported addUser */
+/* eslint no-unused-vars: 0 */
 
 const MessageType = Object.freeze({Anonymous:1, NotSigned: 2, Signed: 3});
 
