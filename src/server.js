@@ -24,7 +24,7 @@ app.post('/user/create', async (req, res) => {
   function validateRegister(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 2);
-      if(typeof req.body.name === 'undefined'){
+      if(typeof req.body.name === 'undefined' || req.body.name.length === 0){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write('No name provided.');
@@ -831,7 +831,8 @@ function checkArgumentCount(res, reject, args, count){
 }
 
 function checkCodename(res, reject, args){
-  if(typeof args.codename === 'undefined'){
+  console.log(args);
+  if(typeof args.codename === 'undefined' || args.codename.length === 0){
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain');
     res.write('No codename provided.');
