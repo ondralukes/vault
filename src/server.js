@@ -69,11 +69,7 @@ app.post('/user/create', async (req, res) => {
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB validating error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length == 0){
             resolve();
@@ -92,11 +88,7 @@ app.post('/user/create', async (req, res) => {
       return new Promise((resolve, reject) => {
         db.collection('users').insertOne(user,(err) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB inserting error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           res.statusCode = 200;
           res.end();
@@ -156,11 +148,7 @@ app.post('/token', async (req, res) => {
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -259,11 +247,7 @@ app.post('/vault/create', async (req, res) => {
       var query = { codename: vault.codename };
       db.collection('vaults').find(query).toArray((err, dbres) => {
         if(err){
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'text/plain');
-          res.write('DB validating error.');
-          res.end();
-          reject();
+          throwDBError(res, reject, err);
         }
         if(dbres.length == 0){
           resolve();
@@ -297,11 +281,7 @@ app.post('/vault/create', async (req, res) => {
     return new Promise((resolve, reject) => {
       db.collection('vaults').insertOne(vault,(err) => {
         if(err){
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'text/plain');
-          res.write('DB inserting error.');
-          res.end();
-          reject();
+          throwDBError(res, reject, err);
         }
         res.statusCode = 200;
         res.end();
@@ -349,11 +329,7 @@ app.post('/vault/get', async (req, res) => {
         db.collection('vaults').aggregate(pipeline, (err, dbres) =>{
           dbres.forEach((v) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(!v){
             res.statusCode = 400;
@@ -454,11 +430,7 @@ app.post('/vault/member/add', async (req, res) => {
         };
         db.collection('vaults').updateOne(query, update, (err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('Failed to push to DB.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.result.n != 1){
             res.statusCode = 500;
@@ -520,11 +492,7 @@ app.post('/message/send', async (req, res) => {
         };
         db.collection('vaults').updateOne(query, update, (err) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('Failed to push to DB.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           resolve();
         });
@@ -580,11 +548,7 @@ app.post('/message/get', async (req, res) => {
         var projection = {_id: 0, messages: {$slice: [params.offset, params.count]}};
         db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(typeof dbres === 'undefined'){
             resolve({});
@@ -648,11 +612,7 @@ app.post('/user/get/private', async (req, res) => {
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -675,11 +635,7 @@ app.post('/user/get/private', async (req, res) => {
         var projection = {_id: 0, accessToken: 1, codename: 1};
         db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           resolve(dbres);
         });
@@ -724,11 +680,7 @@ app.post('/user/get/public', async (req, res) => {
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -809,11 +761,7 @@ function connectToDB(res){
       },
       (err, conn) => {
         if(err){
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'text/plain');
-          res.write('DB connecting error.');
-          res.end();
-          reject();
+          throwDBError(res, reject, err);
         }
         resolve(conn);
       });
@@ -849,6 +797,14 @@ function checkAccessToken(res, reject, args){
     res.end();
     reject();
   }
+}
+
+function throwDBError(res, reject, err){
+  res.statusCode = 500;
+  res.setHeader('Content-Type', 'text/plain');
+  res.write('DB error (' + err.message + ').');
+  res.end();
+  reject();
 }
 
 app.listen(8080);
