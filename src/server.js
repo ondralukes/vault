@@ -23,13 +23,7 @@ app.use(express.static('public'));
 app.post('/user/create', async (req, res) => {
   function validateRegister(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 2);
       if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -217,13 +211,7 @@ app.post('/vault/create', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 3){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 3);
       if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -350,13 +338,7 @@ app.post('/vault/get', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 2);
       if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -437,13 +419,7 @@ app.post('/vault/member/add', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 2);
       if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -543,13 +519,7 @@ app.post('/message/send', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 3){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 3);
       if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -616,13 +586,7 @@ app.post('/message/send', async (req, res) => {
 app.post('/message/get', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 4){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 4);
       if(typeof req.body.codename === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -790,13 +754,7 @@ app.post('/user/get/public', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 1){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 1);
       if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -909,5 +867,15 @@ function connectToDB(res){
       });
     });
   }
+
+function checkArgumentCount(res, reject, args, count){
+  if(Object.keys(args).length > count){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('Too many arguments provided.');
+    res.end();
+    reject();
+  }
+}
 
 app.listen(8080);
