@@ -2,11 +2,14 @@ const sha = require('sha.js');
 const RSA = require('node-rsa');
 const aes = require('aes-js');
 
-module.exports.genRSAKey = function(password){
+module.exports.genRSAKey = function(){
+  var rsaKey = new RSA({b: 2048});
+  return rsaKey;
+};
+
+module.exports.encryptRSAKey = function(rsaKey, password){
   var aesKey = sha('sha256').update(password).digest('hex');
   console.log('AES key is ' + aesKey);
-  var rsaKey = new RSA({b: 2048});
-
   var key = aes.utils.hex.toBytes(aesKey);
   var data = aes.utils.utf8.toBytes(rsaKey.exportKey('private'));
 
@@ -20,7 +23,7 @@ module.exports.genRSAKey = function(password){
     private: privateHex
   };
   return json;
-};
+}
 
 module.exports.decryptRSA = function(rsaKey, password){
   var aesKey = sha('sha256').update(password).digest('hex');

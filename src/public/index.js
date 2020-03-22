@@ -6,10 +6,32 @@ const messagesChunk = 32;
 
 var vaults;
 var openedVault;
+var registerWorker = new Worker('registerWorker.js');
+var startTime = Date.now();
+
+registerWorker.onmessage = function(e){
+  switch (e.data.type) {
+    case 'enc':
+      registerRequest(e.data.user);
+      break;
+    case 'gen':
+      document.getElementById('gen-keypair-msg').style.display = 'none';
+      break;
+  }
+};
 
 function init(){
+  registerWorker.postMessage({type: 'gen'});
   listVaults();
-  setInterval(function(){onScrollMessages();},1000);
+  setInterval(function(){
+    //Update generating counter
+    var time = Date.now() - startTime;
+    var minutes = Math.floor(time / 60000);
+    time %= 60000;
+    var seconds = Math.floor(time / 1000);
+    document.getElementById('gen-keypair-time').innerHTML = (minutes<10?'0':'') + minutes + ':' + (seconds<10?'0':'') + seconds;
+    onScrollMessages();
+  },1000);
   Array.from(document.getElementsByTagName('input')).forEach((input) => {
     input.onfocusout = onLostFocus;
   });
@@ -615,12 +637,9 @@ function register(){
     name: document.getElementById('name').value,
     password: document.getElementById('password').value
   };
-  var worker = new Worker('registerWorker.js');
-  worker.onmessage = function(e){
-    registerRequest(e.data);
-  }
-  worker.postMessage(user);
-  setResult(false, 'Generating RSA key pair. This might take a while.');
+
+  registerWorker.postMessage({type: 'enc', user: user});
+  setResult(false, 'Encrypting RSA key pair. This might take a while.');
 }
 
 function registerRequest(user){
@@ -689,6 +708,7 @@ function sendEncryptedToken(encryptedToken){
   xhr.onreadystatechange = function(){
     if(this.readyState == 4 && xhr.status == 200){
       setResult(true, xhr.responseText, xhr.status);
+      registerWorker.terminate();
     } else if(this.readyState == 4){
       setResult(xhr.status != 401, xhr.responseText, xhr.status);
     }
