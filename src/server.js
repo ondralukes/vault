@@ -212,13 +212,7 @@ app.post('/vault/create', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 3);
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
+      checkCodename(res, reject, req.body);
       if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -339,20 +333,8 @@ app.post('/vault/get', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 2);
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       resolve();
     });
   }
@@ -420,13 +402,7 @@ app.post('/vault/member/add', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 2);
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
+      checkCodename(res, reject, req.body);
       if(typeof req.body.key === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -520,20 +496,8 @@ app.post('/message/send', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 3);
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       if(typeof req.body.message === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -587,20 +551,8 @@ app.post('/message/get', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
       checkArgumentCount(res, reject, req.body, 4);
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       if(typeof req.body.offset === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -873,6 +825,26 @@ function checkArgumentCount(res, reject, args, count){
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain');
     res.write('Too many arguments provided.');
+    res.end();
+    reject();
+  }
+}
+
+function checkCodename(res, reject, args){
+  if(typeof args.codename === 'undefined'){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('No codename provided.');
+    res.end();
+    reject();
+  }
+}
+
+function checkAccessToken(res, reject, args){
+  if(typeof args.accessToken === 'undefined'){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('No access token provided.');
     res.end();
     reject();
   }
