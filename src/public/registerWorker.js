@@ -1,11 +1,32 @@
 importScripts('index-crypto-browserified.js');
 
+var rsaKey;
+var rsaReady = false;
 onmessage = function(e){
-  var user = e.data;
-  user.rsa = cryptoTools.genRSAKey(user.password);
+  switch (e.data.type) {
+    case 'gen':
+      rsaKey = cryptoTools.genRSAKey();
+      rsaReady = true;
+      postMessage(
+        {
+          type: 'gen',
+        }
+      );
+      break;
+    case 'enc':
+      var user = e.data.user;
+      while(!rsaReady);
+      user.rsa = cryptoTools.encryptRSAKey(rsaKey, user.password);
 
-  //We don't the password anymore
-  delete user.password;
+      //We don't need the password anymore
+      delete user.password;
 
-  postMessage(user);
+      postMessage(
+        {
+          type: 'enc',
+          user: user
+        }
+      );
+      break;
+  }
 }

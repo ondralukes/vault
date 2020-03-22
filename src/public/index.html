@@ -20,8 +20,11 @@
         <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
         <input class="form-control my-3" type="password" id="password" placeholder="Password">
         <input type="submit" class="btn btn-primary" value="Authenticate">
-        <div class="my-2  first-login-only">or</div>
+        <div class="my-2 first-login-only">or</div>
         <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
+        <div id="gen-keypair-msg" class="first-login-only">
+          Wait! We are generating your keypair. (<span id="gen-keypair-time">00:00</span>)
+        </div>
         <button onclick="cancelAuth();" class="btn btn-primary mt-2" type="button">Cancel</button>
       </form>
       <div class="my-3" id="overlay-result"></div>
