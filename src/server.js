@@ -70,26 +70,6 @@ app.post('/user/create', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function validateInDB(db, user){
       return new Promise((resolve, reject) => {
         var query = { name: user.name };
@@ -135,7 +115,7 @@ app.post('/user/create', async (req, res) => {
 
     try {
       await validateRegister();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       await validateInDB(db, user);
       await insert(db, user);
@@ -156,7 +136,7 @@ app.post('/token', async (req, res) => {
     return;
   }
   try {
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     var user = await getUser(db, req.body.name);
     var token = await generateToken();
@@ -175,26 +155,6 @@ app.post('/token', async (req, res) => {
   res.setHeader('Content-Type', 'text/json');
   res.write(JSON.stringify(response));
   res.end();
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function getUser(db, name){
       return new Promise((resolve, reject) => {
@@ -312,26 +272,6 @@ app.post('/vault/create', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
   function validateInDB(db, vault){
     return new Promise((resolve, reject) => {
       var query = { codename: vault.codename };
@@ -391,7 +331,7 @@ app.post('/vault/create', async (req, res) => {
   var vault = req.body;
   try {
     await validate();
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     await validateInDB(db, vault);
     vault.accessToken = await generateAccessToken();
@@ -435,26 +375,6 @@ app.post('/vault/get', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getVault(db, params){
       return new Promise((resolve, reject) => {
         var pipeline = [
@@ -490,7 +410,7 @@ app.post('/vault/get', async (req, res) => {
     var vault;
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       vault = await getVault(db, req.body);
       conn.close();
@@ -556,26 +476,6 @@ app.post('/vault/member/add', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function pushToDB(db, params){
       return new Promise((resolve, reject) => {
         var query = {
@@ -622,7 +522,7 @@ app.post('/vault/member/add', async (req, res) => {
 
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       req.body.user = username;
       await pushToDB(db, req.body);
@@ -675,26 +575,6 @@ app.post('/message/send', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function pushToDB(db, params){
       return new Promise((resolve, reject) => {
         var query = { codename: params.codename, accessToken: params.accessToken };
@@ -719,7 +599,7 @@ app.post('/message/send', async (req, res) => {
 
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       await pushToDB(db, req.body);
       conn.close();
@@ -775,26 +655,6 @@ app.post('/message/get', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getMessages(db, params){
       return new Promise((resolve, reject) => {
         var query = {
@@ -824,7 +684,7 @@ app.post('/message/get', async (req, res) => {
     var messages;
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       messages = await getMessages(db, req.body);
       conn.close();
@@ -852,7 +712,7 @@ app.post('/user/get/private', async (req, res) => {
   var user;
 
   try {
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     user = await getUser(db, username);
     user.vaults = await getUserVaults(db, username);
@@ -865,26 +725,6 @@ app.post('/user/get/private', async (req, res) => {
   res.setHeader('Content-Type', 'text/json');
   res.write(JSON.stringify(user));
   res.end();
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function getUser(db, name){
       return new Promise((resolve, reject) => {
@@ -935,7 +775,7 @@ app.post('/user/get/public', async (req, res) => {
   var user;
   try {
     await validate();
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     user = await getUser(db, req.body.name);
   } catch (err){
@@ -967,26 +807,6 @@ app.post('/user/get/public', async (req, res) => {
       resolve();
     });
   }
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function getUser(db, name){
       return new Promise((resolve, reject) => {
@@ -1069,5 +889,25 @@ async function auth(req, res){
     return false;
   }
 }
+
+function connectToDB(res){
+  return new Promise((resolve, reject) => {
+    mongo.connect(url,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      },
+      (err, conn) => {
+        if(err){
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'text/plain');
+          res.write('DB connecting error.');
+          res.end();
+          reject();
+        }
+        resolve(conn);
+      });
+    });
+  }
 
 app.listen(8080);
