@@ -23,14 +23,8 @@ app.use(express.static('public'));
 app.post('/user/create', async (req, res) => {
   function validateRegister(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.name === 'undefined'){
+      checkArgumentCount(res, reject, req.body, 2);
+      if(typeof req.body.name === 'undefined' || req.body.name.length === 0){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
         res.write('No name provided.');
@@ -70,36 +64,12 @@ app.post('/user/create', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function validateInDB(db, user){
       return new Promise((resolve, reject) => {
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB validating error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length == 0){
             resolve();
@@ -118,11 +88,7 @@ app.post('/user/create', async (req, res) => {
       return new Promise((resolve, reject) => {
         db.collection('users').insertOne(user,(err) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB inserting error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           res.statusCode = 200;
           res.end();
@@ -135,7 +101,7 @@ app.post('/user/create', async (req, res) => {
 
     try {
       await validateRegister();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       await validateInDB(db, user);
       await insert(db, user);
@@ -156,7 +122,7 @@ app.post('/token', async (req, res) => {
     return;
   }
   try {
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     var user = await getUser(db, req.body.name);
     var token = await generateToken();
@@ -176,37 +142,13 @@ app.post('/token', async (req, res) => {
   res.write(JSON.stringify(response));
   res.end();
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getUser(db, name){
       return new Promise((resolve, reject) => {
         var user = { name: name };
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -257,20 +199,8 @@ app.post('/vault/create', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 3){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 3);
+      checkCodename(res, reject, req.body);
       if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -312,36 +242,12 @@ app.post('/vault/create', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
   function validateInDB(db, vault){
     return new Promise((resolve, reject) => {
       var query = { codename: vault.codename };
       db.collection('vaults').find(query).toArray((err, dbres) => {
         if(err){
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'text/plain');
-          res.write('DB validating error.');
-          res.end();
-          reject();
+          throwDBError(res, reject, err);
         }
         if(dbres.length == 0){
           resolve();
@@ -375,11 +281,7 @@ app.post('/vault/create', async (req, res) => {
     return new Promise((resolve, reject) => {
       db.collection('vaults').insertOne(vault,(err) => {
         if(err){
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'text/plain');
-          res.write('DB inserting error.');
-          res.end();
-          reject();
+          throwDBError(res, reject, err);
         }
         res.statusCode = 200;
         res.end();
@@ -391,7 +293,7 @@ app.post('/vault/create', async (req, res) => {
   var vault = req.body;
   try {
     await validate();
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     await validateInDB(db, vault);
     vault.accessToken = await generateAccessToken();
@@ -410,50 +312,12 @@ app.post('/vault/get', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 2);
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       resolve();
     });
   }
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function getVault(db, params){
       return new Promise((resolve, reject) => {
@@ -465,11 +329,7 @@ app.post('/vault/get', async (req, res) => {
         db.collection('vaults').aggregate(pipeline, (err, dbres) =>{
           dbres.forEach((v) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(!v){
             res.statusCode = 400;
@@ -490,7 +350,7 @@ app.post('/vault/get', async (req, res) => {
     var vault;
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       vault = await getVault(db, req.body);
       conn.close();
@@ -517,20 +377,8 @@ app.post('/vault/member/add', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 2){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 2);
+      checkCodename(res, reject, req.body);
       if(typeof req.body.key === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -555,26 +403,6 @@ app.post('/vault/member/add', async (req, res) => {
       resolve();
     });
   }
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function pushToDB(db, params){
       return new Promise((resolve, reject) => {
@@ -602,11 +430,7 @@ app.post('/vault/member/add', async (req, res) => {
         };
         db.collection('vaults').updateOne(query, update, (err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('Failed to push to DB.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.result.n != 1){
             res.statusCode = 500;
@@ -622,7 +446,7 @@ app.post('/vault/member/add', async (req, res) => {
 
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       req.body.user = username;
       await pushToDB(db, req.body);
@@ -643,27 +467,9 @@ app.post('/message/send', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 3){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 3);
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       if(typeof req.body.message === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -674,26 +480,6 @@ app.post('/message/send', async (req, res) => {
       resolve();
     });
   }
-
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
 
     function pushToDB(db, params){
       return new Promise((resolve, reject) => {
@@ -706,11 +492,7 @@ app.post('/message/send', async (req, res) => {
         };
         db.collection('vaults').updateOne(query, update, (err) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('Failed to push to DB.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           resolve();
         });
@@ -719,7 +501,7 @@ app.post('/message/send', async (req, res) => {
 
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       await pushToDB(db, req.body);
       conn.close();
@@ -736,27 +518,9 @@ app.post('/message/send', async (req, res) => {
 app.post('/message/get', async (req, res) => {
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 4){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.codename === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No codename provided.');
-        res.end();
-        reject();
-      }
-      if(typeof req.body.accessToken === 'undefined'){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('No access token provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 4);
+      checkCodename(res, reject, req.body);
+      checkAccessToken(res, reject, req.body);
       if(typeof req.body.offset === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -775,26 +539,6 @@ app.post('/message/get', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getMessages(db, params){
       return new Promise((resolve, reject) => {
         var query = {
@@ -804,11 +548,7 @@ app.post('/message/get', async (req, res) => {
         var projection = {_id: 0, messages: {$slice: [params.offset, params.count]}};
         db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(typeof dbres === 'undefined'){
             resolve({});
@@ -824,7 +564,7 @@ app.post('/message/get', async (req, res) => {
     var messages;
     try {
       await validate();
-      var conn = await connectToDB();
+      var conn = await connectToDB(res);
       var db = conn.db('vault');
       messages = await getMessages(db, req.body);
       conn.close();
@@ -852,7 +592,7 @@ app.post('/user/get/private', async (req, res) => {
   var user;
 
   try {
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     user = await getUser(db, username);
     user.vaults = await getUserVaults(db, username);
@@ -866,37 +606,13 @@ app.post('/user/get/private', async (req, res) => {
   res.write(JSON.stringify(user));
   res.end();
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getUser(db, name){
       return new Promise((resolve, reject) => {
         var user = { name: name };
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -919,11 +635,7 @@ app.post('/user/get/private', async (req, res) => {
         var projection = {_id: 0, accessToken: 1, codename: 1};
         db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           resolve(dbres);
         });
@@ -935,7 +647,7 @@ app.post('/user/get/public', async (req, res) => {
   var user;
   try {
     await validate();
-    var conn = await connectToDB();
+    var conn = await connectToDB(res);
     var db = conn.db('vault');
     user = await getUser(db, req.body.name);
   } catch (err){
@@ -950,13 +662,7 @@ app.post('/user/get/public', async (req, res) => {
 
   function validate(){
     return new Promise((resolve, reject) => {
-      if(Object.keys(req.body).length > 1){
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'text/plain');
-        res.write('Too many arguments provided.');
-        res.end();
-        reject();
-      }
+      checkArgumentCount(res, reject, req.body, 1);
       if(typeof req.body.name === 'undefined'){
         res.statusCode = 400;
         res.setHeader('Content-Type', 'text/plain');
@@ -968,37 +674,13 @@ app.post('/user/get/public', async (req, res) => {
     });
   }
 
-  function connectToDB(){
-    return new Promise((resolve, reject) => {
-      mongo.connect(url,
-        {
-          useNewUrlParser: true,
-          useUnifiedTopology: true
-        },
-        (err, conn) => {
-          if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB connecting error.');
-            res.end();
-            reject();
-          }
-          resolve(conn);
-        });
-      });
-    }
-
     function getUser(db, name){
       return new Promise((resolve, reject) => {
         var user = { name: name };
         var query = { name: user.name };
         db.collection('users').find(query).toArray((err, dbres) => {
           if(err){
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'text/plain');
-            res.write('DB lookup error.');
-            res.end();
-            reject();
+            throwDBError(res, reject, err);
           }
           if(dbres.length != 1){
             res.statusCode = 400;
@@ -1068,6 +750,61 @@ async function auth(req, res){
   } catch (err){
     return false;
   }
+}
+
+function connectToDB(res){
+  return new Promise((resolve, reject) => {
+    mongo.connect(url,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      },
+      (err, conn) => {
+        if(err){
+          throwDBError(res, reject, err);
+        }
+        resolve(conn);
+      });
+    });
+  }
+
+function checkArgumentCount(res, reject, args, count){
+  if(Object.keys(args).length > count){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('Too many arguments provided.');
+    res.end();
+    reject();
+  }
+}
+
+function checkCodename(res, reject, args){
+  console.log(args);
+  if(typeof args.codename === 'undefined' || args.codename.length === 0){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('No codename provided.');
+    res.end();
+    reject();
+  }
+}
+
+function checkAccessToken(res, reject, args){
+  if(typeof args.accessToken === 'undefined'){
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('No access token provided.');
+    res.end();
+    reject();
+  }
+}
+
+function throwDBError(res, reject, err){
+  res.statusCode = 500;
+  res.setHeader('Content-Type', 'text/plain');
+  res.write('DB error (' + err.message + ').');
+  res.end();
+  reject();
 }
 
 app.listen(8080);
