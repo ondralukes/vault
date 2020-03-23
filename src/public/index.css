@@ -141,6 +141,7 @@ overflow-wrap: anywhere;
 }
 
 .message-input-field{
+  position: relative;
   display: inline-block;
   flex-basis: 100%;
 }
@@ -192,6 +193,12 @@ overflow-wrap: anywhere;
   width: auto;
 }
 
+.textarea-icon {
+  position: absolute;
+  right: 5pt;
+  bottom: 5pt;
+}
+
 @media (max-device-width:  768px){
   html {
     position: absolute;
@@ -210,6 +217,10 @@ overflow-wrap: anywhere;
     width: 0px;
     max-width: 0px;
     min-width: 0px;
+  }
+  .vault-content {
+    /* Don't allow content to shrink from full width */
+    flex-shrink: 0;
   }
 }
 
