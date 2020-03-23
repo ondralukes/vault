@@ -63,7 +63,7 @@ function init(){
 
 function switchMessageType(){
   selectedMessageType++;
-  if(selectedMessageType == 4){
+  if(selectedMessageType === 4){
     selectedMessageType = MessageType.Anonymous;
   }
   switch(selectedMessageType){
