@@ -8,6 +8,8 @@ var vaults;
 var openedVault;
 var registerWorker = new Worker('registerWorker.js');
 var startTime = Date.now();
+var selectedMessageType = MessageType.NotSigned;
+var scrollToBottom = true;
 
 registerWorker.onmessage = function(e){
   switch (e.data.type) {
@@ -22,6 +24,23 @@ registerWorker.onmessage = function(e){
 
 function init(){
   registerWorker.postMessage({type: 'gen'});
+  document.getElementById('auth-form').onsubmit = function(){
+    authenticate();
+    return false;
+  };
+  document.getElementById('register-btn').onclick = register;
+  document.getElementById('cancel-auth-btn').onclick = cancelAuth;
+  document.getElementById('create-vault-btn').onclick = createVault;
+  document.getElementById('create-form-back-btn').onclick = showSidebar;
+  document.getElementById('vault-content-back-btn').onclick = showSidebar;
+  document.getElementById('section-messages-btn').onclick = function() {switchSection(0);};
+  document.getElementById('section-settings-btn').onclick = function() {switchSection(1);};
+  document.getElementById('textarea-icon').onclick = switchMessageType;
+  document.getElementById('add-member-btn').onclick = addUser;
+  document.getElementById('hide-error-btn').onclick = hideError;
+  document.getElementById('sidebar-item-create').onclick = function(){closeVault(true);};
+  document.getElementById('message-text').onkeydown = textareaOnKeyDown;
+  document.getElementById('messages').onscroll = onScrollMessages;
   listVaults();
   setInterval(function(){
     //Update generating counter
@@ -30,7 +49,7 @@ function init(){
     time %= 60000;
     var seconds = Math.floor(time / 1000);
     document.getElementById('gen-keypair-time').innerHTML = (minutes<10?'0':'') + minutes + ':' + (seconds<10?'0':'') + seconds;
-    onScrollMessages();
+    updateMessages();
   },1000);
   Array.from(document.getElementsByTagName('input')).forEach((input) => {
     input.onfocusout = onLostFocus;
@@ -39,6 +58,24 @@ function init(){
   //Fix height on mobile devices (avoid problems with address bar)
   if(window.innerWidth <= 768){
     document.getElementsByClassName('cont')[0].style.height = window.innerHeight + 'px';
+  }
+}
+
+function switchMessageType(){
+  selectedMessageType++;
+  if(selectedMessageType == 4){
+    selectedMessageType = MessageType.Anonymous;
+  }
+  switch(selectedMessageType){
+    case MessageType.Anonymous:
+    document.getElementById('textarea-icon').src = 'img/anon.svg';
+    break;
+    case MessageType.NotSigned:
+    document.getElementById('textarea-icon').src = 'img/warn.svg';
+    break;
+    case MessageType.Signed:
+    document.getElementById('textarea-icon').src = 'img/signed.svg';
+    break;
   }
 }
 
@@ -308,15 +345,25 @@ function closeVault(hide){
   if(hide) hideSidebar();
 }
 
-function sendSignedMessage(){
-  saveRSA('sign a message', () => {
-    sendMessage(MessageType.Signed);
-    forgetRSA();
-  }, true);
+function textareaOnKeyDown(e){
+  if(e.keyCode === 13){
+    var messageText = document.getElementById('message-text').value;
+    var type = selectedMessageType;
+    if(type == MessageType.Signed){
+      saveRSA('sign a message', () => {
+        sendMessage(messageText, MessageType.Signed);
+        forgetRSA();
+      }, true);
+    } else {
+      sendMessage(messageText, type);
+    }
+    document.getElementById('message-text').value = '';
+    e.preventDefault();
+  }
 }
 
-function sendMessage(type) {
-  var messageText = document.getElementById('message-text').value.replace(/\n/g, '<br>');
+function sendMessage(messageText, type) {
+  messageText = messageText.replace(/\n/g, '<br>');
 
   var message = {
     content: messageText,
@@ -451,6 +498,10 @@ async function getMessages(newMessage){
         } else {
           oldMessageIndex -= messages.length;
         }
+        if(scrollToBottom){
+          var messagesElement = document.getElementById('messages');
+          messagesElement.scrollTo(0, messagesElement.scrollHeight);
+        }
       }
       waitingForMessages = false;
     }
@@ -495,7 +546,7 @@ function verifySignature(message){
   });
 }
 
-function onScrollMessages(){
+function updateMessages(){
   if(typeof openedVault === 'undefined'){
     return;
   }
@@ -518,6 +569,16 @@ function onScrollMessages(){
     }
   }
   loadNewerOrOlder = !loadNewerOrOlder;
+}
+
+function onScrollMessages(){
+  var messagesElement = document.getElementById('messages');
+  var scroll = messagesElement.offsetHeight + messagesElement.scrollTop;
+  if(scroll + 50 >= messagesElement.scrollHeight){
+    scrollToBottom = true;
+  } else {
+    scrollToBottom = false;
+  }
 }
 
 function hideError(){

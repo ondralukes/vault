@@ -16,23 +16,23 @@
     <div class="overlay text-center p-5" id="overlay" style="display: none;">
       <h1>Authentication required.</h1>
       <span>Authentication is required to <span id="overlay-message"></span>.</span>
-      <form onsubmit="authenticate(); return false;">
+      <form id="auth-form">
         <input class="form-control my-3 first-login-only" type="text" id="name" placeholder="Name">
         <input class="form-control my-3" type="password" id="password" placeholder="Password">
         <input type="submit" class="btn btn-primary" value="Authenticate">
         <div class="my-2 first-login-only">or</div>
-        <button onclick="register();" class="btn btn-primary first-login-only" type="button">Register</button>
+        <button id="register-btn" class="btn btn-primary first-login-only" type="button">Register</button>
         <div id="gen-keypair-msg" class="first-login-only">
           Wait! We are generating your keypair. (<span id="gen-keypair-time">00:00</span>)
         </div>
-        <button onclick="cancelAuth();" class="btn btn-primary mt-2" type="button">Cancel</button>
+        <button id="cancel-auth-btn" class="btn btn-primary mt-2" type="button">Cancel</button>
       </form>
       <div class="my-3" id="overlay-result"></div>
     </div>
     <div class="overlay text-center p-5" id="error" style="display: none;">
       <h1>Error.</h1>
       <span id="error-message"></span>
-      <button onclick="hideError();" class="btn btn-primary mt-3" type="button">OK.</button>
+      <button id="hide-error-btn" class="btn btn-primary mt-3" type="button">OK.</button>
     </div>
     <div class="sidebar" id="sidebar">
       <div class="scrollable">
@@ -41,7 +41,7 @@
           <small class="sidebar-item-codename">Codename</small>
           <button type="button" class="btn btn-primary sidebar-item-decrypt-btn">Unlock</button>
         </div>
-        <div onclick="closeVault(true);" class="sidebar-item sidebar-item-create" id="sidebar-item-template">
+        <div class="sidebar-item sidebar-item-create" id="sidebar-item-create">
           Create new vault
       </div>
     </div>
@@ -51,32 +51,32 @@
       <small class="form-text mb-2 text-left">Codename is NOT encrypted.</small>
       <input class="form-control mt-1" id="vault-name" type="text" placeholder="Vault name">
       <small class="form-text mb-2 text-left">Name is encrypted.</small>
-      <button class="btn btn-primary mb-3 mt-1" type="button" onclick="createVault();">Create new vault</button>
-      <button class="btn btn-primary mb-3 mt-1 d-md-none" type="button" onclick="showSidebar();">Back</button>
+      <button id="create-vault-btn" class="btn btn-primary mb-3 mt-1" type="button">Create new vault</button>
+      <button id="create-form-back-btn" class="btn btn-primary mb-3 mt-1 d-md-none" type="button">Back</button>
       <div id="create-vault-result"></div>
     </div>
 
     <div id="vault-content" class="vault-content"  style="display: none;">
       <div class="infobar">
         <div class="infobar-heading">
-        <button class="btn btn-inline d-md-none" onclick="showSidebar();">Back</button>
+        <button id="vault-content-back-btn" class="btn btn-inline d-md-none">Back</button>
         <h2 class="vault-name-ins infobar-heading-text">Info</h2>
       </div>
         <div class="vault-sections">
-          <div class="section-btn text-inverted" onclick="switchSection(0);">Messages</div>
-          <div class="section-btn" onclick="switchSection(1);">Settings</div>
+          <div id="section-messages-btn" class="section-btn text-inverted">Messages</div>
+          <div id="section-settings-btn" class="section-btn">Settings</div>
         </div>
       </div>
 
       <!-- Messages -->
-      <div class="messages messages-section">
+      <div id="messages" class="messages messages-section">
         <div id="old-messages-load-trigger"></div>
         <div class="message" id="message-template" style="display: none;">
           <div class="message-inner">
             <div class="message-sender font-weight-bolder">Sender</div>
             <div class="message-text">abc</div>
             <div class="message-info">
-              <img class="message-icon" src="img/anon.svg">
+              <img class="message-icon" src="img/warn.svg">
             </div>
           </div>
         </div>
@@ -85,20 +85,7 @@
       <div class="message-input messages-section">
         <div class="message-input-field p-1">
           <textarea id="message-text" class="form-control textarea" type="text"></textarea>
-        </div>
-        <div class="message-send-buttons d-inline-block">
-          <button type="button" class="btn btn-primary btn-send-anon my-1" onclick="sendMessage(MessageType.Anonymous);">
-            <img class="message-icon" src="img/anon.svg">
-            Send anonymously
-          </button>
-          <button type="button" class="btn btn-primary btn-send-not-signed my-1" onclick="sendMessage(MessageType.NotSigned);">
-            <img class="message-icon" src="img/warn.svg">
-            Send not signed
-          </button>
-          <button type="button" class="btn btn-primary btn-send-signed my-1" onclick="sendSignedMessage();">
-            <img class="message-icon" src="img/signed.svg">
-            Send signed
-          </button>
+          <img id="textarea-icon" class="message-icon textarea-icon" src="img/warn.svg">
         </div>
       </div>
 
@@ -133,7 +120,7 @@
             <input id="new-member-name" class="form-control" type="text" placeholder="Name">
           </div>
           <div class="col-4">
-            <button id="add-member-btn" class="btn btn-primary" onclick="addUser();">Add</button>
+            <button id="add-member-btn" class="btn btn-primary">Add</button>
           </div>
         </div>
       </div>
