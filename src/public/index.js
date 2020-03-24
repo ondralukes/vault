@@ -659,16 +659,7 @@ function authenticatedRequest(message, url, data, callback, keep){
   overlayCallback = callback;
   keepRSA = keep;
   if(!decryptedRSA){
-    document.getElementById('overlay').style.display = '';
-    document.getElementById('overlay-message').innerHTML = message;
-    document.getElementById('overlay-result').innerHTML = '';
-    Array.from(document.getElementsByClassName('first-login-only')).forEach((item) => {
-      if(!storedName){
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
-    });
+    authClear(message);
     if(storedName){
       document.getElementById('password').focus();
     } else {
@@ -700,7 +691,7 @@ function register(){
   };
 
   registerWorker.postMessage({type: 'enc', user: user});
-  setResult(false, 'Encrypting RSA key pair. This might take a while.');
+  authSetResult(false, 'Encrypting RSA key pair. This might take a while.');
 }
 
 function registerRequest(user){
@@ -710,7 +701,7 @@ function registerRequest(user){
       if(this.status == 200){
         authenticate();
       } else {
-        setResult(false, xhr.responseText, this.status);
+        authSetResult(false, xhr.responseText, this.status);
       }
       console.log(xhr.responseText);
     }
@@ -738,7 +729,7 @@ function authenticate(){
         res.user.rsa = cryptoTools.decryptRSA(res.user.rsa, password);
         if(!res.user.rsa.private.includes('-----BEGIN RSA PRIVATE KEY-----')){
           console.log('Failed to decrypt RSA. Wrong password?');
-          setResult(false, 'Failed to decrypt RSA. Wrong password?');
+          authSetResult(false, 'Failed to decrypt RSA. Wrong password?');
           return;
         }
       } else {
@@ -754,7 +745,7 @@ function authenticate(){
         forgetRSA();
       }
     } else if(this.readyState == 4){
-      setResult(false, this.responseText);
+      authSetResult(false, this.responseText);
       if(!keepRSA) forgetRSA();
     }
   }
@@ -768,10 +759,10 @@ function sendEncryptedToken(encryptedToken){
   overlayData.encryptedToken =  encryptedToken;
   xhr.onreadystatechange = function(){
     if(this.readyState == 4 && xhr.status == 200){
-      setResult(true, xhr.responseText, xhr.status);
+      authSetResult(true, xhr.responseText, xhr.status);
       registerWorker.terminate();
     } else if(this.readyState == 4){
-      setResult(xhr.status != 401, xhr.responseText, xhr.status);
+      authSetResult(xhr.status != 401, xhr.responseText, xhr.status);
     }
   }
   xhr.open('POST', overlayURL, true);
@@ -779,10 +770,16 @@ function sendEncryptedToken(encryptedToken){
   xhr.send(JSON.stringify(overlayData));
 }
 
-function setResult(verified, response, statusCode){
+function authSetResult(verified, response, statusCode){
+  document.getElementById('auth-form').style.display = 'none';
   var e = document.getElementById('overlay-result');
+  e.style.display = '';
   if(!verified){
     e.innerHTML = response;
+    setTimeout(function(){
+      e.style.display = 'none';
+      document.getElementById('auth-form').style.display = '';
+    }, 1000);
   } else {
     e.innerHTML = 'Success!';
     setTimeout(function(){
@@ -792,6 +789,21 @@ function setResult(verified, response, statusCode){
       overlayCallback(response, statusCode);
     }, 500);
   }
+}
+
+function authClear(message){
+  document.getElementById('auth-form').style.display = '';
+  document.getElementById('overlay-result').style.display = 'none';
+  document.getElementById('overlay').style.display = '';
+  document.getElementById('overlay-message').innerHTML = message;
+  document.getElementById('overlay-result').innerHTML = '';
+  Array.from(document.getElementsByClassName('first-login-only')).forEach((item) => {
+    if(!storedName){
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
 }
 
 //utils
