@@ -434,7 +434,6 @@ function showMessage(message, newMessage){
   } else {
     template.parentNode.insertBefore(cloned, template);
   }
-  document.getElementById('message-text').value = '';
 }
 
 function clearMessages(){
