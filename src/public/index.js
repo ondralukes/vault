@@ -428,6 +428,24 @@ function showMessage(message, newMessage){
     cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
     break;
   }
+
+  var date = new Date(message.timestamp);
+  if(message.timestamp < Date.now() - 24*60*60000){
+    var day = (date.getDate() < 10?'0':'') + date.getDate();
+    var month = (date.getMonth() < 10?'0':'') + date.getMonth();
+    var year = date.getFullYear();
+    cloned.getElementsByClassName('message-time')[0].innerHTML = day + '. ' + month + '. ' + year;
+  } else {
+    var h = (date.getHours() < 10?'0':'') + date.getHours();
+    var m = (date.getMinutes() < 10?'0':'') + date.getMinutes();
+    var s = (date.getSeconds() < 10?'0':'') + date.getSeconds()
+    cloned.getElementsByClassName('message-time')[0].innerHTML = h + ':' + m + ':' + s;
+  }
+  if(message.sender == storedName){
+    cloned.classList.add('my-message');
+  } else {
+    cloned.classList.remove('my-message');
+  }
   cloned.classList.add('message-generated');
   if(newMessage){
     template.parentNode.appendChild(cloned);
