@@ -1,2 +1,5 @@
 src/node_modules/
+# Ignore browserified scripts
 src/*/*-browserified.*
+# Ignore DB data
+data/
