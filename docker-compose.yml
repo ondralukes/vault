@@ -12,3 +12,5 @@ services:
   vaultdb:
     image: mongo
     container_name: vaultdb
+    volumes:
+      - "${DB_PATH}:/data/db/"
