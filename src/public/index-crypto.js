@@ -58,7 +58,7 @@ module.exports.decryptKey = function(rsaKey, key){
 
 module.exports.encryptData = function(hexKey, data){
   var key = aes.utils.hex.toBytes(hexKey);
-  data = aes.utils.utf8.toBytes(data);
+  data = Buffer.from(data);
 
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.encrypt(data);
@@ -74,7 +74,7 @@ module.exports.decryptData = function(hexKey, data){
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.decrypt(data);
 
-  var decrypted = aes.utils.utf8.fromBytes(bytes);
+  var decrypted = Buffer.from(bytes).toString('utf8');
   return decrypted;
 }
 
