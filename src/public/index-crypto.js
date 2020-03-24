@@ -59,7 +59,6 @@ module.exports.decryptKey = function(rsaKey, key){
 module.exports.encryptData = function(hexKey, data){
   var key = aes.utils.hex.toBytes(hexKey);
   data = Buffer.from(data);
-  console.log("back check = " + data.toString('utf8'));
 
   var aesCtr = new aes.ModeOfOperation.ctr(key, new aes.Counter(7));
   var bytes = aesCtr.encrypt(data);
