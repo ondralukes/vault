@@ -137,7 +137,7 @@ function createVault(){
         }
       ]
     };
-    authenticatedRequest('create new vault', '/vault/create', data, function(response, status){
+    authenticatedRequest('create new vault', 'vault/create', data, function(response, status){
       var result = document.getElementById('create-vault-result');
       if(status === 200){
         result.innerHTML = 'Created succesfully';
@@ -151,7 +151,7 @@ function createVault(){
 }
 
 function listVaults(){
-  authenticatedRequest('list vaults', '/user/get/private', {}, function(response, status){
+  authenticatedRequest('list vaults', 'user/get/private', {}, function(response, status){
     if(status === 200){
       var user = JSON.parse(response);
       console.log(user);
@@ -210,7 +210,7 @@ function unlockVault(codename, update, open) {
       codename: vaults[codename].codename,
       accessToken: vaults[codename].accessToken
     };
-    authenticatedRequest('unlock vault', '/vault/get', data, function(response, status){
+    authenticatedRequest('unlock vault', 'vault/get', data, function(response, status){
       if(status != 200){
         throwError('Failed to get vault data.');
         sidebar.getElementsByClassName('sidebar-item-decrypt-btn')[0]
@@ -397,7 +397,7 @@ function sendMessage(messageText, type) {
       }
     }
   };
-  xhr.open('POST', '/message/send', true);
+  xhr.open('POST', 'message/send', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.send(JSON.stringify(
     {
@@ -523,7 +523,7 @@ async function getMessages(newMessage){
       waitingForMessages = false;
     }
   };
-  xhr.open('POST', '/message/get', true);
+  xhr.open('POST', 'message/get', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   var req = {
     codename: vault.codename,
@@ -627,7 +627,7 @@ function addUser(){
         key: key,
         codename: getOpenVault().codename
       };
-      authenticatedRequest('add key to vault', '/vault/member/add', req, (response, status) => {
+      authenticatedRequest('add key to vault', 'vault/member/add', req, (response, status) => {
         if(status != 200){
           throwError(response);
           forgetRSA();
@@ -654,7 +654,7 @@ function getUserPublic(name, callback){
       }
     }
   };
-  xhr.open('POST', '/user/get/public', true);
+  xhr.open('POST', 'user/get/public', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.send(JSON.stringify(
     {
@@ -696,7 +696,7 @@ function forgetRSA(){
 }
 
 function saveRSA(message, callback){
-  authenticatedRequest(message, '/verifyToken', {}, function(){
+  authenticatedRequest(message, 'verifyToken', {}, function(){
     callback();
   }, true);
 }
@@ -723,7 +723,7 @@ function registerRequest(user){
       console.log(xhr.responseText);
     }
   }
-  xhr.open('POST', '/user/create', true);
+  xhr.open('POST', 'user/create', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.send(JSON.stringify(user));
 }
@@ -766,7 +766,7 @@ function authenticate(){
       if(!keepRSA) forgetRSA();
     }
   }
-  xhr.open('POST', '/token', true);
+  xhr.open('POST', 'token', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.send(JSON.stringify(req));
 }
