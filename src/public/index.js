@@ -104,7 +104,7 @@ function switchSection(sec){
     item.style.display = sec===1?'':'none';
   });
   Array.from(document.getElementsByClassName('section-btn')).forEach((item, i) => {
-    if(sec == i){
+    if(sec === i){
       item.classList.add('text-inverted');
     } else {
       item.classList.remove('text-inverted');
@@ -139,7 +139,7 @@ function createVault(){
     };
     authenticatedRequest('create new vault', '/vault/create', data, function(response, status){
       var result = document.getElementById('create-vault-result');
-      if(status == 200){
+      if(status === 200){
         result.innerHTML = 'Created succesfully';
       } else {
         result.innerHTML = response;
@@ -152,7 +152,7 @@ function createVault(){
 
 function listVaults(){
   authenticatedRequest('list vaults', '/user/get/private', {}, function(response, status){
-    if(status == 200){
+    if(status === 200){
       var user = JSON.parse(response);
       console.log(user);
       var template = document.getElementById('sidebar-item-template');
@@ -389,8 +389,8 @@ function sendMessage(messageText, type) {
   console.log('Sending...');
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         console.log('Sent.');
       } else {
         console.log('Sending failed.');
@@ -428,13 +428,30 @@ function showMessage(message, newMessage){
     cloned.getElementsByClassName('message-sender')[0].innerHTML = message.sender;
     break;
   }
+
+  var date = new Date(message.timestamp);
+  if(message.timestamp < Date.now() - 24*60*60000){
+    var day = (date.getDate() < 10?'0':'') + date.getDate();
+    var month = (date.getMonth() < 10?'0':'') + date.getMonth();
+    var year = date.getFullYear();
+    cloned.getElementsByClassName('message-time')[0].innerHTML = day + '. ' + month + '. ' + year;
+  } else {
+    var h = (date.getHours() < 10?'0':'') + date.getHours();
+    var m = (date.getMinutes() < 10?'0':'') + date.getMinutes();
+    var s = (date.getSeconds() < 10?'0':'') + date.getSeconds()
+    cloned.getElementsByClassName('message-time')[0].innerHTML = h + ':' + m + ':' + s;
+  }
+  if(message.sender == storedName){
+    cloned.classList.add('my-message');
+  } else {
+    cloned.classList.remove('my-message');
+  }
   cloned.classList.add('message-generated');
   if(newMessage){
     template.parentNode.appendChild(cloned);
   } else {
     template.parentNode.insertBefore(cloned, template);
   }
-  document.getElementById('message-text').value = '';
 }
 
 function clearMessages(){
@@ -455,8 +472,8 @@ async function getMessages(newMessage){
 
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = async function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         console.log(JSON.parse(this.responseText));
         var messages = JSON.parse(this.responseText);
 
@@ -598,7 +615,7 @@ function getOpenVault(){
 function addUser(){
   var username = document.getElementById('new-member-name').value;
   getUserPublic(username, (statusCode, resp) => {
-    if(statusCode == 200){
+    if(statusCode === 200){
       console.log('Encrypting key for user ' + username);
       var encryptedKey = cryptoTools.encryptKey(resp.rsa, getOpenVault().key);
       var key =
@@ -629,8 +646,8 @@ function addUser(){
 function getUserPublic(name, callback){
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         callback(this.status, JSON.parse(this.responseText));
       } else {
         callback(this.status, this.responseText);
@@ -659,16 +676,7 @@ function authenticatedRequest(message, url, data, callback, keep){
   overlayCallback = callback;
   keepRSA = keep;
   if(!decryptedRSA){
-    document.getElementById('overlay').style.display = '';
-    document.getElementById('overlay-message').innerHTML = message;
-    document.getElementById('overlay-result').innerHTML = '';
-    Array.from(document.getElementsByClassName('first-login-only')).forEach((item) => {
-      if(!storedName){
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
-    });
+    authClear(message);
     if(storedName){
       document.getElementById('password').focus();
     } else {
@@ -700,17 +708,17 @@ function register(){
   };
 
   registerWorker.postMessage({type: 'enc', user: user});
-  setResult(false, 'Encrypting RSA key pair. This might take a while.');
+  authSetResult(false, 'Encrypting RSA key pair. This might take a while.');
 }
 
 function registerRequest(user){
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         authenticate();
       } else {
-        setResult(false, xhr.responseText, this.status);
+        authSetResult(false, xhr.responseText, this.status);
       }
       console.log(xhr.responseText);
     }
@@ -730,7 +738,7 @@ function authenticate(){
   var password = document.getElementById('password').value
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4 && xhr.status == 200){
+    if(this.readyState === 4 && xhr.status === 200){
       var res = JSON.parse(xhr.responseText);
       console.log('Got token for user ' + res.user.name);
       if(!decryptedRSA){
@@ -738,7 +746,7 @@ function authenticate(){
         res.user.rsa = cryptoTools.decryptRSA(res.user.rsa, password);
         if(!res.user.rsa.private.includes('-----BEGIN RSA PRIVATE KEY-----')){
           console.log('Failed to decrypt RSA. Wrong password?');
-          setResult(false, 'Failed to decrypt RSA. Wrong password?');
+          authSetResult(false, 'Failed to decrypt RSA. Wrong password?');
           return;
         }
       } else {
@@ -753,8 +761,8 @@ function authenticate(){
       } else {
         forgetRSA();
       }
-    } else if(this.readyState == 4){
-      setResult(false, this.responseText);
+    } else if(this.readyState === 4){
+      authSetResult(false, this.responseText);
       if(!keepRSA) forgetRSA();
     }
   }
@@ -767,11 +775,11 @@ function sendEncryptedToken(encryptedToken){
   var xhr = new XMLHttpRequest();
   overlayData.encryptedToken =  encryptedToken;
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4 && xhr.status == 200){
-      setResult(true, xhr.responseText, xhr.status);
+    if(this.readyState === 4 && xhr.status === 200){
+      authSetResult(true, xhr.responseText, xhr.status);
       registerWorker.terminate();
-    } else if(this.readyState == 4){
-      setResult(xhr.status != 401, xhr.responseText, xhr.status);
+    } else if(this.readyState === 4){
+      authSetResult(xhr.status !== 401, xhr.responseText, xhr.status);
     }
   }
   xhr.open('POST', overlayURL, true);
@@ -779,10 +787,16 @@ function sendEncryptedToken(encryptedToken){
   xhr.send(JSON.stringify(overlayData));
 }
 
-function setResult(verified, response, statusCode){
+function authSetResult(verified, response, statusCode){
+  document.getElementById('auth-form').style.display = 'none';
   var e = document.getElementById('overlay-result');
+  e.style.display = '';
   if(!verified){
     e.innerHTML = response;
+    setTimeout(function(){
+      e.style.display = 'none';
+      document.getElementById('auth-form').style.display = '';
+    }, 1000);
   } else {
     e.innerHTML = 'Success!';
     setTimeout(function(){
@@ -792,6 +806,21 @@ function setResult(verified, response, statusCode){
       overlayCallback(response, statusCode);
     }, 500);
   }
+}
+
+function authClear(message){
+  document.getElementById('auth-form').style.display = '';
+  document.getElementById('overlay-result').style.display = 'none';
+  document.getElementById('overlay').style.display = '';
+  document.getElementById('overlay-message').innerHTML = message;
+  document.getElementById('overlay-result').innerHTML = '';
+  Array.from(document.getElementsByClassName('first-login-only')).forEach((item) => {
+    if(!storedName){
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
 }
 
 //utils

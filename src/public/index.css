@@ -118,6 +118,14 @@ body {
   margin-bottom: 10pt;
 }
 
+.my-message {
+  text-align: right;
+}
+
+.my-message > .message-inner {
+  background-color: #636363;
+}
+
 .message-icon {
   width: 15pt;
   height: 15pt;
