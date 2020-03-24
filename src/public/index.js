@@ -104,7 +104,7 @@ function switchSection(sec){
     item.style.display = sec===1?'':'none';
   });
   Array.from(document.getElementsByClassName('section-btn')).forEach((item, i) => {
-    if(sec == i){
+    if(sec === i){
       item.classList.add('text-inverted');
     } else {
       item.classList.remove('text-inverted');
@@ -139,7 +139,7 @@ function createVault(){
     };
     authenticatedRequest('create new vault', '/vault/create', data, function(response, status){
       var result = document.getElementById('create-vault-result');
-      if(status == 200){
+      if(status === 200){
         result.innerHTML = 'Created succesfully';
       } else {
         result.innerHTML = response;
@@ -152,7 +152,7 @@ function createVault(){
 
 function listVaults(){
   authenticatedRequest('list vaults', '/user/get/private', {}, function(response, status){
-    if(status == 200){
+    if(status === 200){
       var user = JSON.parse(response);
       console.log(user);
       var template = document.getElementById('sidebar-item-template');
@@ -389,8 +389,8 @@ function sendMessage(messageText, type) {
   console.log('Sending...');
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         console.log('Sent.');
       } else {
         console.log('Sending failed.');
@@ -472,8 +472,8 @@ async function getMessages(newMessage){
 
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = async function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         console.log(JSON.parse(this.responseText));
         var messages = JSON.parse(this.responseText);
 
@@ -615,7 +615,7 @@ function getOpenVault(){
 function addUser(){
   var username = document.getElementById('new-member-name').value;
   getUserPublic(username, (statusCode, resp) => {
-    if(statusCode == 200){
+    if(statusCode === 200){
       console.log('Encrypting key for user ' + username);
       var encryptedKey = cryptoTools.encryptKey(resp.rsa, getOpenVault().key);
       var key =
@@ -646,8 +646,8 @@ function addUser(){
 function getUserPublic(name, callback){
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         callback(this.status, JSON.parse(this.responseText));
       } else {
         callback(this.status, this.responseText);
@@ -714,8 +714,8 @@ function register(){
 function registerRequest(user){
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4){
-      if(this.status == 200){
+    if(this.readyState === 4){
+      if(this.status === 200){
         authenticate();
       } else {
         authSetResult(false, xhr.responseText, this.status);
@@ -738,7 +738,7 @@ function authenticate(){
   var password = document.getElementById('password').value
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4 && xhr.status == 200){
+    if(this.readyState === 4 && xhr.status === 200){
       var res = JSON.parse(xhr.responseText);
       console.log('Got token for user ' + res.user.name);
       if(!decryptedRSA){
@@ -761,7 +761,7 @@ function authenticate(){
       } else {
         forgetRSA();
       }
-    } else if(this.readyState == 4){
+    } else if(this.readyState === 4){
       authSetResult(false, this.responseText);
       if(!keepRSA) forgetRSA();
     }
@@ -775,11 +775,11 @@ function sendEncryptedToken(encryptedToken){
   var xhr = new XMLHttpRequest();
   overlayData.encryptedToken =  encryptedToken;
   xhr.onreadystatechange = function(){
-    if(this.readyState == 4 && xhr.status == 200){
+    if(this.readyState === 4 && xhr.status === 200){
       authSetResult(true, xhr.responseText, xhr.status);
       registerWorker.terminate();
-    } else if(this.readyState == 4){
-      authSetResult(xhr.status != 401, xhr.responseText, xhr.status);
+    } else if(this.readyState === 4){
+      authSetResult(xhr.status !== 401, xhr.responseText, xhr.status);
     }
   }
   xhr.open('POST', overlayURL, true);
