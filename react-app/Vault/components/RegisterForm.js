@@ -16,13 +16,13 @@ export default class RegisterForm extends React.Component {
     this.passwordConfirmInput = React.createRef();
     this.onSubmit = this.onSubmit.bind(this);
     this.render = this.render.bind(this);
-    ReactNative.NativeModules.Crypto.generateRSA((err, res) => {
-      if(err){
-        ReactNative.Alert.alert('Oh no!', 'RSA generating failed:\n' + err);
+    ReactNative.NativeModules.Crypto.generateRSA((res) => {
+      if(res.err){
+        ReactNative.Alert.alert('Oh no!', 'RSA generating failed:\n' + res.err);
         return;
       }
       this.setState({
-        rsa: JSON.parse(res)
+        rsa: res
       })
     });
   }

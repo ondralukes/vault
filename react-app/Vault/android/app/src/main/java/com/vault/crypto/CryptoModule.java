@@ -9,6 +9,8 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import org.json.JSONObject;
 
@@ -56,12 +58,14 @@ public class CryptoModule extends ReactContextBaseJavaModule {
                 publicKeyStr += Base64.encodeToString(publicKey.getEncoded(), Base64.DEFAULT);
                 publicKeyStr += "\n-----END PUBLIC KEY-----\n";
 
-                JSONObject result = new JSONObject();
-                result.put("private", privateKeyStr);
-                result.put("public",publicKeyStr);
-                cb.invoke(null, result.toString());
+                WritableMap result = new WritableNativeMap();
+                result.putString("private", privateKeyStr);
+                result.putString("public", publicKeyStr);
+                cb.invoke(result);
             } catch (Exception e){
-                cb.invoke(e.getMessage(), null);
+                WritableMap result = new WritableNativeMap();
+                result.putString("err", e.getMessage());
+                cb.invoke(result);
             }
         }
     }
