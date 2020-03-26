@@ -16,6 +16,8 @@ export default class RegisterForm extends React.Component {
     this.passwordConfirmInput = React.createRef();
     this.onSubmit = this.onSubmit.bind(this);
     this.render = this.render.bind(this);
+
+    //Generate RSA keypair for later use
     ReactNative.NativeModules.Crypto.generateRSA((res) => {
       if(res.err){
         ReactNative.Alert.alert('Oh no!', 'RSA generating failed:\n' + res.err);
@@ -23,7 +25,7 @@ export default class RegisterForm extends React.Component {
       }
       this.setState({
         rsa: res
-      })
+      });
     });
   }
   async onSubmit() {
@@ -34,7 +36,36 @@ export default class RegisterForm extends React.Component {
       ReactNative.Alert.alert('Oh no!', 'Passwords do not match.');
       return;
     }
-    this.props.onCompleted({name: name});
+    ReactNative.NativeModules.Crypto.encryptRSA(this.state.rsa, password,
+      async (res) => {
+        if(res.err){
+          ReactNative.Alert.alert('Oh no!', 'RSA encrypting failed:\n' + res.err);
+          return;
+        }
+
+        //Send request
+        var response = await fetch('https://www.ondralukes.cz/vault/user/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            rsa: res
+          })
+        });
+        if(response.status !== 200){
+            ReactNative.Alert.alert(
+              'Oh no!',
+              'Server rejected your request:\n' + (await response.text())
+            );
+            return;
+        }
+        this.props.onCompleted({
+          name: name,
+          rsa: this.state.rsa
+        });
+      });
   }
   render() {
     return (
