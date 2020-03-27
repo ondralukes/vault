@@ -1,6 +1,5 @@
 package com.vault.crypto;
 
-import android.telecom.Call;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -10,11 +9,8 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
-
-import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -39,6 +35,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class CryptoModule extends ReactContextBaseJavaModule {
+    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
+
     public CryptoModule(ReactApplicationContext reactContext){
         super(reactContext);
     }
@@ -95,9 +93,9 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         new Thread(g).start();
     }
     class EncryptRSA implements Runnable {
-        Callback cb;
-        ReadableMap rsaKey;
-        String password;
+        private Callback cb;
+        private ReadableMap rsaKey;
+        private String password;
         EncryptRSA(ReadableMap rsaKey, String password, Callback cb){
             this.rsaKey = rsaKey;
             this.password = password;
@@ -128,9 +126,9 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         new Thread(g).start();
     }
     class DecryptRSA implements Runnable {
-        Callback cb;
-        ReadableMap rsaKey;
-        String password;
+        private Callback cb;
+        private ReadableMap rsaKey;
+        private String password;
         DecryptRSA(ReadableMap rsaKey, String password, Callback cb){
             this.rsaKey = rsaKey;
             this.password = password;
@@ -161,9 +159,9 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         new Thread(g).start();
     }
     class SignToken implements Runnable {
-        Callback cb;
-        ReadableMap rsaKey;
-        String token;
+        private Callback cb;
+        private ReadableMap rsaKey;
+        private String token;
         SignToken(ReadableMap rsaKey, String token, Callback cb){
             this.rsaKey = rsaKey;
             this.token = token;
@@ -202,27 +200,8 @@ public class CryptoModule extends ReactContextBaseJavaModule {
             }
         }
     }
-    public static byte[] hexToBytes(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
-    }
-    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
 
-    public static String encryptData(byte[] keyBytes, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    private static String encryptData(byte[] keyBytes, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
         SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
@@ -254,7 +233,7 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         String encodedEncrypted = Base64.encodeToString(result, Base64.DEFAULT);
         return encodedEncrypted;
     }
-    public static String decryptData(byte[] keyBytes, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    private static String decryptData(byte[] keyBytes, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 
         byte[] dataBytes = Base64.decode(data, Base64.DEFAULT);
@@ -274,10 +253,28 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         String encodedDecrypted = new String(decrypted, StandardCharsets.UTF_8);
         return encodedDecrypted;
     }
-    public static byte[] concat(byte[] a, byte[] b){
+    private static byte[] concat(byte[] a, byte[] b){
         byte[] c = new byte[a.length + b.length];
         System.arraycopy(a, 0, c, 0, a.length);
         System.arraycopy(b, 0, c, a.length, b.length);
         return c;
+    }
+    private static byte[] hexToBytes(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+    private static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 }
