@@ -74,8 +74,10 @@ module.exports.decryptData = function(hexKey, data){
   var paddingLength = data.slice(16,17)[0];
   data = data.slice(17);
 
+
   var aesCbc = new aes.ModeOfOperation.cbc(key, iv);
   var bytes = aesCbc.decrypt(data);
+
 
   bytes = bytes.slice(paddingLength);
   var decrypted = Buffer.from(bytes).toString('utf8');
