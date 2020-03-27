@@ -29,7 +29,7 @@ export default class AuthView extends React.Component {
         <View style={styles.container} className='container'>
           <HeadingText>Login</HeadingText>
           <AuthForm
-          onCompleted={this.props.onCompleted}
+          serverApi={this.props.serverApi}
           onSwitchToRegister={this.onSwitchToRegister}
           />
         </View>
@@ -39,7 +39,7 @@ export default class AuthView extends React.Component {
         <View style={styles.container} className='container'>
           <HeadingText>Sign up</HeadingText>
           <RegisterForm
-          onCompleted={this.props.onCompleted}
+          serverApi={this.props.serverApi}
           onSwitchToLogin={this.onSwitchToLogin}
           />
         </View>

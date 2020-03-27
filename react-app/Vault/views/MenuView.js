@@ -8,7 +8,7 @@ export default class MenuView extends React.Component {
     return (
       <View style={styles.container} className='container'>
         <HeadingText>You're in.</HeadingText>
-        <Button onPress={this.props.onLogOut}>Log Out</Button>
+        <Button onPress={this.props.serverApi.logOut}>Log Out</Button>
       </View>
     );
   }

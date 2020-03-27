@@ -13,8 +13,9 @@ export default class AuthForm extends React.Component {
     this.onSubmit = this.onSubmit.bind(this);
   }
   async onSubmit() {
-    // TODO: Check login
-    this.props.onCompleted(null);
+    var name = this.nameInput.current.state.value;
+    var password = this.passwordInput.current.state.value;
+    this.props.serverApi.login(name, password);
   }
   render() {
     return (
