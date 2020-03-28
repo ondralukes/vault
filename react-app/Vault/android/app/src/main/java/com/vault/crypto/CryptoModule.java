@@ -53,7 +53,7 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         new Thread(g).start();
     }
     class GenerateRSA implements Runnable {
-        Callback cb;
+        private Callback cb;
         GenerateRSA(Callback cb){
             this.cb = cb;
         }
