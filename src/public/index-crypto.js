@@ -12,7 +12,7 @@ module.exports.encryptRSAKey = function(rsaKey, password){
   var aesKey = sha('sha256').update(password).digest('hex');
   console.log('AES key is ' + aesKey);
 
-  var privateEncrypted = cryptoTools.encryptData(aesKey, rsaKey.exportKey('private'));
+  var privateEncrypted = cryptoTools.encryptData(aesKey, rsaKey.exportKey('pkcs8-private'));
 
   var json = {
     public: rsaKey.exportKey('public'),

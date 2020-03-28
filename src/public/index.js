@@ -744,7 +744,7 @@ function authenticate(){
       if(!decryptedRSA){
         console.log('Decrypting user RSA...');
         res.user.rsa = cryptoTools.decryptRSA(res.user.rsa, password);
-        if(!res.user.rsa.private.includes('-----BEGIN RSA PRIVATE KEY-----')){
+        if(!res.user.rsa.private.includes('-----BEGIN PRIVATE KEY-----')){
           console.log('Failed to decrypt RSA. Wrong password?');
           authSetResult(false, 'Failed to decrypt RSA. Wrong password?');
           return;

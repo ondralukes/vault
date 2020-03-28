@@ -67,9 +67,9 @@ public class CryptoModule extends ReactContextBaseJavaModule {
                 PrivateKey privateKey = key.getPrivate();
                 PublicKey publicKey = key.getPublic();
 
-                String privateKeyStr = "-----BEGIN RSA PRIVATE KEY-----\n";
+                String privateKeyStr = "-----BEGIN PRIVATE KEY-----\n";
                 privateKeyStr += Base64.encodeToString(privateKey.getEncoded(), Base64.DEFAULT);
-                privateKeyStr += "\n-----END RSA PRIVATE KEY-----\n";
+                privateKeyStr += "\n-----END PRIVATE KEY-----\n";
 
                 String publicKeyStr = "-----BEGIN PUBLIC KEY-----\n";
                 publicKeyStr += Base64.encodeToString(publicKey.getEncoded(), Base64.DEFAULT);
@@ -171,8 +171,8 @@ public class CryptoModule extends ReactContextBaseJavaModule {
         public void run() {
             try {
                 String privateKeyStr = rsaKey.getString("private");
-                privateKeyStr = privateKeyStr.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
-                privateKeyStr = privateKeyStr.replace("-----END RSA PRIVATE KEY-----\n", "");
+                privateKeyStr = privateKeyStr.replace("-----BEGIN PRIVATE KEY-----\n", "");
+                privateKeyStr = privateKeyStr.replace("-----END PRIVATE KEY-----", "");
 
                 byte[] privateKeyBytes = Base64.decode(privateKeyStr, Base64.DEFAULT);
 
