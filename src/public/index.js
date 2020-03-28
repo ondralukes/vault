@@ -744,7 +744,7 @@ function authenticate(){
       if(!decryptedRSA){
         console.log('Decrypting user RSA...');
         res.user.rsa = cryptoTools.decryptRSA(res.user.rsa, password);
-        if(!res.user.rsa.private.includes('-----BEGIN RSA PRIVATE KEY-----')){
+        if(!res.user.rsa.private.includes('-----BEGIN PRIVATE KEY-----')){
           console.log('Failed to decrypt RSA. Wrong password?');
           authSetResult(false, 'Failed to decrypt RSA. Wrong password?');
           return;
@@ -753,8 +753,8 @@ function authenticate(){
         res.user.rsa = decryptedRSA;
       }
       console.log('Signing token...');
-      var encryptedToken = cryptoTools.encryptToken(res.user.rsa, res.token)
-      sendEncryptedToken(encryptedToken);
+      var signedToken = cryptoTools.signToken(res.user.rsa, res.token)
+      sendSignedToken(signedToken);
       storedName = res.user.name;
       if(keepRSA){
         decryptedRSA = res.user.rsa;
@@ -771,9 +771,9 @@ function authenticate(){
   xhr.send(JSON.stringify(req));
 }
 
-function sendEncryptedToken(encryptedToken){
+function sendSignedToken(signedToken){
   var xhr = new XMLHttpRequest();
-  overlayData.encryptedToken =  encryptedToken;
+  overlayData.signedToken =  signedToken;
   xhr.onreadystatechange = function(){
     if(this.readyState === 4 && xhr.status === 200){
       authSetResult(true, xhr.responseText, xhr.status);

@@ -12,7 +12,7 @@ module.exports.encryptRSAKey = function(rsaKey, password){
   var aesKey = sha('sha256').update(password).digest('hex');
   console.log('AES key is ' + aesKey);
 
-  var privateEncrypted = cryptoTools.encryptData(aesKey, rsaKey.exportKey('private'));
+  var privateEncrypted = cryptoTools.encryptData(aesKey, rsaKey.exportKey('pkcs8-private'));
 
   var json = {
     public: rsaKey.exportKey('public'),
@@ -30,9 +30,9 @@ module.exports.decryptRSA = function(rsaKey, password){
   return rsaKey;
 };
 
-module.exports.encryptToken = function(rsaKey, token){
+module.exports.signToken = function(rsaKey, token){
   var rsa = new RSA(rsaKey.private);
-  return rsa.encryptPrivate(token, 'hex', 'hex');
+  return rsa.sign(token, 'hex', 'hex');
 }
 
 module.exports.encryptKey = function(rsaKey, key){
@@ -74,8 +74,10 @@ module.exports.decryptData = function(hexKey, data){
   var paddingLength = data.slice(16,17)[0];
   data = data.slice(17);
 
-  var aesCtr = new aes.ModeOfOperation.cbc(key, iv);
-  var bytes = aesCtr.decrypt(data);
+
+  var aesCbc = new aes.ModeOfOperation.cbc(key, iv);
+  var bytes = aesCbc.decrypt(data);
+
 
   bytes = bytes.slice(paddingLength);
   var decrypted = Buffer.from(bytes).toString('utf8');

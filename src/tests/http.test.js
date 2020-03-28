@@ -57,10 +57,10 @@ describe('Testing user registration' , () => {
 
     var token = data.token;
     var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
+    var signedToken = key.sign(token, 'hex', 'hex');
     res = await http
     .post('/verifyToken')
-    .send({encryptedToken: encryptedToken});
+    .send({signedToken: signedToken});
     expect(res.statusCode).toEqual(200);
     done();
   });
@@ -78,7 +78,7 @@ describe('Testing vaults', () => {
     expect(data.token).toBeDefined();
     var token = data.token;
     var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
+    var signedToken = key.sign(token, 'hex', 'hex');
 
     vaultKey = await crypto.randomBytes(32);
     var encryptedVaultKey = encryptKey(userRsa, vaultKey);
@@ -86,7 +86,7 @@ describe('Testing vaults', () => {
     var encryptedVaultName = encryptData(vaultKey, vaultName);
 
     var req = {
-      encryptedToken: encryptedToken,
+      signedToken: signedToken,
       codename: vaultCodename,
       keys: [
         {
@@ -114,10 +114,10 @@ describe('Testing vaults', () => {
     expect(data.token).toBeDefined();
     var token = data.token;
     var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
+    var signedToken = key.sign(token, 'hex', 'hex');
     res = await http
     .post('/user/get/private')
-    .send({encryptedToken: encryptedToken});
+    .send({signedToken: signedToken});
     expect(res.statusCode).toEqual(200);
     data = JSON.parse(res.text);
     expect(data.rsa).toEqual(registerParams.rsa);
@@ -139,10 +139,10 @@ describe('Testing vaults', () => {
     expect(data.token).toBeDefined();
     var token = data.token;
     var key = new RSA(userRsaPrivate);
-    var encryptedToken = key.encryptPrivate(token, 'hex', 'hex');
+    var signedToken = key.sign(token, 'hex', 'hex');
 
     var req = {
-      encryptedToken: encryptedToken,
+      signedToken: signedToken,
       codename: lockedVault.codename,
       accessToken: lockedVault.accessToken
     };

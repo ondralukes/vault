@@ -166,7 +166,7 @@ app.post('/token', async (req, res) => {
 
     function generateToken(){
       return new Promise((resolve, reject) => {
-        crypto.randomBytes(256, (err, buf) => {
+        crypto.randomBytes(128, (err, buf) => {
           if(err){
             res.statusCode = 500;
             res.setHeader('Content-Type', 'text/plain');
@@ -195,7 +195,7 @@ app.post('/vault/create', async (req, res) => {
   if(!verified){
     return;
   }
-  delete req.body.encryptedToken;
+  delete req.body.signedToken;
 
   function validate(){
     return new Promise((resolve, reject) => {
@@ -308,7 +308,7 @@ app.post('/vault/create', async (req, res) => {
 
 app.post('/vault/get', async (req, res) => {
   //Do not require auth, request is secured by access token.
-  delete req.body.encryptedToken;
+  delete req.body.signedToken;
 
   function validate(){
     return new Promise((resolve, reject) => {
@@ -373,7 +373,7 @@ app.post('/vault/member/add', async (req, res) => {
   if(!verified){
     return;
   }
-  delete req.body.encryptedToken;
+  delete req.body.signedToken;
 
   function validate(){
     return new Promise((resolve, reject) => {
@@ -463,7 +463,7 @@ app.post('/vault/member/add', async (req, res) => {
 
 app.post('/message/send', async (req, res) => {
   //Do not require auth, request is secured by access token.
-  delete req.body.encryptedToken;
+  delete req.body.signedToken;
 
   function validate(){
     return new Promise((resolve, reject) => {
@@ -588,7 +588,7 @@ app.post('/user/get/private', async (req, res) => {
   if(!verified){
     return;
   }
-  delete req.body.encryptedToken;
+  delete req.body.signedToken;
   var user;
 
   try {
@@ -710,20 +710,25 @@ async function auth(req, res){
     res.end();
     return false;
   }
-  if(!req.body.encryptedToken){
+  if(!req.body.signedToken){
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain');
     res.write('No encrypted token provided.');
     res.end();
     return false;
   }
-  var rsaKey = new RSA(req.session.user.rsa.public);
-  var encryptedToken = Buffer.from(req.body.encryptedToken, 'hex');
-  var decryptedToken = rsaKey.decryptPublic(encryptedToken);
-
-  var verified = false;
-  if(req.session.token == decryptedToken.toString('hex')){
-    verified = true;
+  try {
+    var rsaKey = new RSA(req.session.user.rsa.public);
+    var signature = Buffer.from(req.body.signedToken, 'hex');
+    var verified = false;
+    if(rsaKey.verify(req.session.token, signature, 'hex', 'hex')){
+      verified = true;
+    }
+  } catch (error) {
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('Failed to verify token: ' + error);
+    res.end();
   }
   try {
     await new Promise((resolve, reject) => {
