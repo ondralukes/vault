@@ -2,25 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:vault/ChangingText.dart';
 import 'package:vault/MainMenu.dart';
 import 'package:vault/ServerAPI.dart';
-import 'package:vault/SignInForm.dart';
+import 'package:vault/SignUpForm.dart';
 
-class SignUpForm extends StatefulWidget {
-  const SignUpForm({Key key, this.serverAPI}) : super(key: key);
+class SignInForm extends StatefulWidget {
+  const SignInForm({Key key, this.serverAPI}) : super(key: key);
 
   final ServerAPI serverAPI;
   @override
   State<StatefulWidget> createState() {
-    return SignUpFormState();
+    return SignInFormState();
   }
 }
 
-class SignUpFormState extends State<SignUpForm> {
+class SignInFormState extends State<SignInForm> {
   final key = GlobalKey<FormState>();
   final resultTextKey = GlobalKey<ChangingTextState>();
 
   String name;
   String password;
-  String passwordConfirm;
   bool canSubmit = true;
   bool showProcessIndicator = false;
 
@@ -67,10 +66,10 @@ class SignUpFormState extends State<SignUpForm> {
                               color: Theme.of(context).primaryColor)),
                       errorBorder: OutlineInputBorder(
                           borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
+                          BorderSide(color: Theme.of(context).errorColor)),
                       focusedErrorBorder: OutlineInputBorder(
                           borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
+                          BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),
@@ -80,9 +79,6 @@ class SignUpFormState extends State<SignUpForm> {
                     validator: (value) {
                       if (value.isEmpty) {
                         return 'Please enter a password.';
-                      }
-                      if (value != this.passwordConfirm) {
-                        return 'Passwords do not match.';
                       }
                       return null;
                     },
@@ -103,46 +99,10 @@ class SignUpFormState extends State<SignUpForm> {
                               color: Theme.of(context).primaryColor)),
                       errorBorder: OutlineInputBorder(
                           borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
+                          BorderSide(color: Theme.of(context).errorColor)),
                       focusedErrorBorder: OutlineInputBorder(
                           borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(10),
-                  child: TextFormField(
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'Please enter password again.';
-                      }
-                      if (value != this.password) {
-                        return 'Password do not match.';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      this.passwordConfirm = value;
-                    },
-                    style: Theme.of(context).textTheme.body1,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Confirm password',
-                      prefixIcon: Icon(Icons.vpn_key,
-                          color: Theme.of(context).primaryColor),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      errorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
+                          BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),
@@ -151,7 +111,7 @@ class SignUpFormState extends State<SignUpForm> {
                   child: RaisedButton(
                     color: Colors.grey[700],
                     child: Text(
-                      'Sign up',
+                      'Sign in',
                       style: Theme.of(context).textTheme.body1,
                     ),
                     onPressed: () async {
@@ -161,17 +121,19 @@ class SignUpFormState extends State<SignUpForm> {
                         setState(() {
                           showProcessIndicator = true;
                         });
-                        bool success = await widget.serverAPI.signUp(this.name,
-                            this.password, resultTextKey.currentState);
+                        bool success = await widget.serverAPI.signIn(
+                            this.name,
+                            this.password,
+                            resultTextKey.currentState);
                         setState(() {
                           showProcessIndicator = false;
                         });
-                        if (success) {
+                        if(success){
                           Navigator.pushReplacement(
                               context,
                               new MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      new MainMenu()));
+                                  builder: (BuildContext context) => new MainMenu())
+                          );
                         }
                       }
                       canSubmit = true;
@@ -194,17 +156,17 @@ class SignUpFormState extends State<SignUpForm> {
                     )),
                 Center(
                     child: InkWell(
-                  child: Text('or click here to sign in.'),
-                  onTap: () {
-                    Navigator.pushReplacement(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (BuildContext context) =>
-                                new SignInForm(
+                      child: Text('or click here to sign up.'),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            new MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                new SignUpForm(
                                   serverAPI: widget.serverAPI,
                                 )));
-                  },
-                )
+                      },
+                    )
                 ),
               ],
             )),
