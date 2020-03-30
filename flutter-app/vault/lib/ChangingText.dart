@@ -14,7 +14,7 @@ class ChangingTextState extends State<ChangingText> {
   ChangingTextState(this.text);
   String text;
 
-  changeText(String text){
+  setText(String text){
     setState(() {
       this.text = text;
     });

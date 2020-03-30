@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vault/ChangingText.dart';
+import 'package:vault/MainMenu.dart';
 import 'package:vault/ServerAPI.dart';
 
 class SignUpForm extends StatefulWidget {
@@ -18,6 +19,9 @@ class SignUpFormState extends State<SignUpForm> {
 
   String name;
   String password;
+  String passwordConfirm;
+  bool canSubmit = true;
+  bool showProcessIndicator = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +44,7 @@ class SignUpFormState extends State<SignUpForm> {
                   child: TextFormField(
                     validator: (value) {
                       if (value.isEmpty) {
-                        return "Please enter a name.";
+                        return 'Please enter a name.';
                       }
                       return null;
                     },
@@ -74,7 +78,10 @@ class SignUpFormState extends State<SignUpForm> {
                   child: TextFormField(
                     validator: (value) {
                       if (value.isEmpty) {
-                        return "Please enter a password.";
+                        return 'Please enter a password.';
+                      }
+                      if (value != this.passwordConfirm) {
+                        return 'Passwords do not match.';
                       }
                       return null;
                     },
@@ -104,6 +111,42 @@ class SignUpFormState extends State<SignUpForm> {
                 ),
                 Padding(
                   padding: EdgeInsets.all(10),
+                  child: TextFormField(
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Please enter password again.';
+                      }
+                      if (value != this.password) {
+                        return 'Password do not match.';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      this.passwordConfirm = value;
+                    },
+                    style: Theme.of(context).textTheme.body1,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm password',
+                      prefixIcon: Icon(Icons.vpn_key,
+                          color: Theme.of(context).primaryColor),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).primaryColor)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).primaryColor)),
+                      errorBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Theme.of(context).errorColor)),
+                      focusedErrorBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Theme.of(context).errorColor)),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(10),
                   child: RaisedButton(
                     color: Colors.grey[700],
                     child: Text(
@@ -111,22 +154,46 @@ class SignUpFormState extends State<SignUpForm> {
                       style: Theme.of(context).textTheme.body1,
                     ),
                     onPressed: () async {
+                      if (!canSubmit) return;
+                      canSubmit = false;
                       if (key.currentState.validate()) {
-                        Scaffold.of(context).showSnackBar(
-                            SnackBar(content: Text('Processing Data')));
-                        String result = await widget.serverAPI.signUp(this.name, this.password);
-                        resultTextKey.currentState.changeText(result);
+                        setState(() {
+                          showProcessIndicator = true;
+                        });
+                        bool success = await widget.serverAPI.signUp(
+                            this.name,
+                            this.password,
+                            resultTextKey.currentState);
+                        setState(() {
+                          showProcessIndicator = false;
+                        });
+                        if(success){
+                          //TODO: Move to next page
+                          Navigator.pushReplacement(
+                              context,
+                              new MaterialPageRoute(
+                                  builder: (BuildContext context) => new MainMenu())
+                          );
+                        }
                       }
+                      canSubmit = true;
                     },
                   ),
                 ),
+                Visibility(
+                  child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Center(child: CircularProgressIndicator())),
+                  visible: showProcessIndicator,
+                ),
                 Padding(
-                  padding: EdgeInsets.all(10),
-                  child: ChangingText(
-                    key: this.resultTextKey,
-                    text: '<wait>',
-                  )
-                )
+                    padding: EdgeInsets.all(10),
+                    child: Center(
+                      child: ChangingText(
+                        key: this.resultTextKey,
+                        text: '',
+                      ),
+                    )),
               ],
             )),
         backgroundColor: Colors.grey[800]);
