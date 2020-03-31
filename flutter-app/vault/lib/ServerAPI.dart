@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as Encrypt;
 import 'package:convert/convert.dart';
-import 'package:flutter/material.dart';
+import 'package:pointycastle/export.dart';
 
 import 'package:vault/ChangingText.dart';
 import 'package:vault/CryptoTools.dart';
@@ -12,11 +12,13 @@ import 'package:vault/rsa_pem.dart';
 
 import 'package:http/http.dart' as Http;
 
+import 'Classes.dart';
+
 class ServerAPI{
-  String url;
-  ServerAPI(String url){
-    this.url = url;
-  }
+  final String url;
+  final session = new Session();
+  User user;
+  ServerAPI(this.url);
 
   Future<bool> signUp(String name, String password, ChangingTextState processIndicator) async {
     processIndicator.setText('Generaing keypair. This might take a while.');
@@ -33,7 +35,7 @@ class ServerAPI{
     Map rsaMap = {
     'public': RsaKeyHelper().encodePublicKeyToPem(keyPair.publicKey),
     'private': encryptedPrivateKey
-  };
+   };
 
     Map req = {
       'name': name,
@@ -54,24 +56,22 @@ class ServerAPI{
       processIndicator.setText('Request failed: ' + resp.body);
       return false;
     }
+    user = new User();
+    this.user.name = name;
+    this.user.rsa = keyPair;
     return true;
   }
 
   Future<bool> signIn(String name, String password, ChangingTextState processIndicator) async {
     processIndicator.setText('Requesting server for access.');
 
-    Map<String, String> headers = {
-      'Content-Type': 'application/json'
-    };
-
     Map req = {
       'name': name,
     };
 
-    Http.Response tokenResp = await Http.post(
+    Http.Response tokenResp = await session.post(
         url + '/token',
-        headers: headers,
-        body: jsonEncode(req)
+        jsonEncode(req)
     );
 
     if(tokenResp.statusCode != 200){
@@ -109,17 +109,72 @@ class ServerAPI{
       'signedToken': hex.encode(signedToken.bytes),
     };
 
-    Http.Response authResp = await Http.post(
-        url + '/token',
-        headers: headers,
-        body: jsonEncode(req)
+    Http.Response authResp = await session.post(
+        url + '/verifyToken',
+        jsonEncode(req)
     );
 
-    if(tokenResp.statusCode != 200){
+    if(authResp.statusCode != 200){
       processIndicator.setText('Request failed: ' + authResp.body);
       return false;
     }
+    user = new User();
+    this.user.name = name;
+    this.user.rsa = new AsymmetricKeyPair(publicKey, privateKey);
     return true;
+  }
+
+  Future<Map> getUserData() async{
+    final resp = await request('/user/get/private', Map());
+    if(resp.statusCode == 200){
+      return jsonDecode(resp.body);
+    }
+    return Map();
+  }
+
+  Future<bool> logOut() async {
+    user = null;
+    return true;
+  }
+
+  Future<Http.Response> request(String relativeUrl, Map data,) async {
+    Map req = {
+      'name': this.user.name,
+    };
+
+    Http.Response tokenResp = await session.post(
+        url + '/token',
+        jsonEncode(req)
+    );
+
+    if(tokenResp.statusCode != 200){
+      return tokenResp;
+    }
+
+    final tokenJson = jsonDecode(tokenResp.body);
+
+
+    final signer = Encrypt.Signer(
+        Encrypt.RSASigner(
+            Encrypt.RSASignDigest.SHA256,
+            publicKey: this.user.rsa.publicKey,
+            privateKey: this.user.rsa.privateKey
+        )
+    );
+
+    final signedToken = signer.signBytes(hex.decode(tokenJson['token']));
+
+    data['signedToken'] = hex.encode(signedToken.bytes);
+
+    Http.Response authResp = await session.post(
+        url + relativeUrl,
+        jsonEncode(data)
+    );
+
+    if(authResp.statusCode != 200){
+      return authResp;
+    }
+    return authResp;
   }
   Uint8List getKey(String password){
     var passwordBytes = utf8.encode(password);
@@ -173,5 +228,26 @@ class ServerAPI{
     final decryptedBytes = decrypted.codeUnits;
     final finalBytes = decryptedBytes.sublist(paddingLength);
     return utf8.decode(finalBytes);
+  }
+}
+
+class Session {
+  Map<String, String> headers = {
+    'Content-Type': 'application/json'
+  };
+
+  Future<Http.Response> post(String url, dynamic data) async {
+    Http.Response response = await Http.post(url, body: data, headers: headers);
+    updateCookie(response);
+    return response;
+  }
+
+  void updateCookie(Http.Response response) {
+    String rawCookie = response.headers['set-cookie'];
+    if (rawCookie != null) {
+      int index = rawCookie.indexOf(';');
+      headers['cookie'] =
+      (index == -1) ? rawCookie : rawCookie.substring(0, index);
+    }
   }
 }
