@@ -156,6 +156,8 @@ class SignUpFormState extends State<SignUpForm> {
                     ),
                     onPressed: () async {
                       if (!canSubmit) return;
+                      //Hide keyboard
+                      FocusScope.of(context).unfocus();
                       canSubmit = false;
                       if (key.currentState.validate()) {
                         setState(() {
@@ -171,7 +173,9 @@ class SignUpFormState extends State<SignUpForm> {
                               context,
                               new MaterialPageRoute(
                                   builder: (BuildContext context) =>
-                                      new MainMenu()));
+                                      new MainMenu(
+                                        serverAPI: widget.serverAPI,
+                                      )));
                         }
                       }
                       canSubmit = true;
@@ -208,6 +212,7 @@ class SignUpFormState extends State<SignUpForm> {
                 ),
               ],
             )),
-        backgroundColor: Colors.grey[800]);
+        backgroundColor: Theme.of(context).backgroundColor
+    );
   }
 }

@@ -26,6 +26,7 @@ class AppState extends State<App> {
         title: 'Vault',
         theme: ThemeData(
             primaryColor: Colors.grey,
+            backgroundColor: Colors.grey[800],
             accentColor: Colors.grey[200],
             textTheme: TextTheme(
                 body1: TextStyle(

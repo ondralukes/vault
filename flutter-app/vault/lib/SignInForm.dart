@@ -116,6 +116,8 @@ class SignInFormState extends State<SignInForm> {
                     ),
                     onPressed: () async {
                       if (!canSubmit) return;
+                      //Hide keyboard
+                      FocusScope.of(context).unfocus();
                       canSubmit = false;
                       if (key.currentState.validate()) {
                         setState(() {
@@ -132,7 +134,9 @@ class SignInFormState extends State<SignInForm> {
                           Navigator.pushReplacement(
                               context,
                               new MaterialPageRoute(
-                                  builder: (BuildContext context) => new MainMenu())
+                                  builder: (BuildContext context) => new MainMenu(
+                                    serverAPI: widget.serverAPI,
+                                  ))
                           );
                         }
                       }
@@ -170,6 +174,7 @@ class SignInFormState extends State<SignInForm> {
                 ),
               ],
             )),
-        backgroundColor: Colors.grey[800]);
+        backgroundColor: Theme.of(context).backgroundColor
+    );
   }
 }
