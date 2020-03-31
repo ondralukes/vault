@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vault/ServerAPI.dart';
 import 'package:vault/SignUpForm.dart';
 
@@ -19,6 +20,14 @@ class AppState extends State<App> {
   AppState(String url) : super() {
     this.url = url;
     api = ServerAPI(url);
+  }
+  @override
+  void initState() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.portraitUp
+    ]);
+    super.initState();
   }
   @override
   Widget build(BuildContext context) {
