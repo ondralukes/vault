@@ -22,6 +22,12 @@ class VaultMenu extends StatelessWidget {
             )
           ],
         ),
+        body: TabBarView(
+          children: <Widget>[
+            Text('Messages'),
+            Text('Settings')
+          ],
+        ),
         backgroundColor: Theme.of(context).backgroundColor,
       ),
     )),

@@ -17,17 +17,9 @@ class MainMenu extends StatefulWidget {
 class MainMenuState extends State<MainMenu> {
   @override
   initState() {
-    getUserData();
     super.initState();
   }
 
-  getUserData() async {
-    final user = await widget.serverAPI.getUserData();
-    if(vaultListKey.currentState == null) return;
-    vaultListKey.currentState.loadVaults(user['vaults']);
-  }
-
-  final vaultListKey = GlobalKey<VaultListState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +48,9 @@ class MainMenuState extends State<MainMenu> {
       body: Center(
           child: Padding(
               padding: EdgeInsets.only(right: 10, left: 10),
-              child: VaultList(key: vaultListKey))),
+              child: VaultList(
+                serverAPI: widget.serverAPI,
+              ))),
       backgroundColor: Theme.of(context).backgroundColor,
     );
   }
