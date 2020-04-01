@@ -15,7 +15,7 @@ class VaultList extends StatefulWidget {
 }
 
 class VaultListState extends State<VaultList> {
-  List<Vault> vaults = List<Vault>();
+  List<Vault> vaults;
   @override
   void initState() {
     loadVaults();
@@ -24,7 +24,7 @@ class VaultListState extends State<VaultList> {
 
   @override
   Widget build(BuildContext context) {
-    if (vaults.length == 0) {
+    if (vaults == null) {
       return CircularProgressIndicator();
     }
     return RefreshIndicator(
@@ -40,6 +40,7 @@ class VaultListState extends State<VaultList> {
     final user = await widget.serverAPI.getUserData();
     final rawVaults = user['vaults'];
     setState(() {
+      if(vaults == null) vaults = List<Vault>();
       vaults.clear();
       rawVaults.forEach((v) => vaults.add(Vault(v)));
     });

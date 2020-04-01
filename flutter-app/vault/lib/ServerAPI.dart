@@ -1,9 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
-import 'package:encrypt/encrypt.dart' as Encrypt;
 import 'package:convert/convert.dart';
 import 'package:pointycastle/export.dart';
 
@@ -27,8 +22,8 @@ class ServerAPI{
 
     processIndicator.setText('Encrypting keypair.');
 
-    final encryptedPrivateKey = encryptData(
-        getKey(password),
+    final encryptedPrivateKey = await CryptoTools.encryptData(
+        CryptoTools.getKey(password),
         RsaKeyHelper().encodePrivateKeyToPem(keyPair.privateKey)
     );
 
@@ -85,7 +80,7 @@ class ServerAPI{
     processIndicator.setText('Decrypting keypair.');
     try {
       tokenJson['user']['rsa']['private'] =
-          decryptData(getKey(password), tokenJson['user']['rsa']['private']);
+          await CryptoTools.decryptData(CryptoTools.getKey(password), tokenJson['user']['rsa']['private']);
     } catch (err){
       processIndicator.setText('Failed to decrypt keypair. Wrong password?');
       return false;
@@ -94,20 +89,16 @@ class ServerAPI{
     final publicKey = RsaKeyHelper().parsePublicKeyFromPem(tokenJson['user']['rsa']['public']);
     final privateKey = RsaKeyHelper().parsePrivateKeyFromPem(tokenJson['user']['rsa']['private']);
 
-    final signer = Encrypt.Signer(
-      Encrypt.RSASigner(
-        Encrypt.RSASignDigest.SHA256,
-        publicKey: publicKey,
-        privateKey: privateKey
-      )
-    );
+    user = new User();
+    this.user.name = name;
+    this.user.rsa = new AsymmetricKeyPair(publicKey, privateKey);
 
     processIndicator.setText('Signing.');
-    final signedToken = signer.signBytes(hex.decode(tokenJson['token']));
+    final signedToken = CryptoTools.sign(this.user.rsa, hex.decode(tokenJson['token']));
 
     processIndicator.setText('Sending signature');
     req = {
-      'signedToken': hex.encode(signedToken.bytes),
+      'signedToken': hex.encode(signedToken),
     };
 
     Http.Response authResp = await session.post(
@@ -119,9 +110,6 @@ class ServerAPI{
       processIndicator.setText('Request failed: ' + authResp.body);
       return false;
     }
-    user = new User();
-    this.user.name = name;
-    this.user.rsa = new AsymmetricKeyPair(publicKey, privateKey);
     return true;
   }
 
@@ -162,18 +150,9 @@ class ServerAPI{
 
     final tokenJson = jsonDecode(tokenResp.body);
 
+    final signedToken = CryptoTools.sign(this.user.rsa, hex.decode(tokenJson['token']));
 
-    final signer = Encrypt.Signer(
-        Encrypt.RSASigner(
-            Encrypt.RSASignDigest.SHA256,
-            publicKey: this.user.rsa.publicKey,
-            privateKey: this.user.rsa.privateKey
-        )
-    );
-
-    final signedToken = signer.signBytes(hex.decode(tokenJson['token']));
-
-    data['signedToken'] = hex.encode(signedToken.bytes);
+    data['signedToken'] = hex.encode(signedToken);
 
     Http.Response authResp = await session.post(
         url + relativeUrl,
@@ -184,59 +163,6 @@ class ServerAPI{
       return authResp;
     }
     return authResp;
-  }
-  Uint8List getKey(String password){
-    var passwordBytes = utf8.encode(password);
-    var hash = sha256.convert(passwordBytes);
-    return hash.bytes;
-  }
-  String encryptData(Uint8List keyBytes, String data){
-    final dataBytes = utf8.encode(data);
-
-    var paddingLength = 16 - (data.length % 16);
-    if(paddingLength == 16) paddingLength = 0;
-    final rand = Random.secure();
-    final paddingBytes = List<int>.generate(paddingLength, (i) => rand.nextInt(256));
-
-    final bytesToEncrypt = paddingBytes + dataBytes;
-
-    final iv = Encrypt.IV.fromSecureRandom(16);
-    final key = Encrypt.Key(keyBytes);
-    final aes = Encrypt.Encrypter(Encrypt.AES(
-        key,
-        mode: Encrypt.AESMode.cbc,
-        padding: null
-    ));
-
-    final encrypted = aes.encrypt(
-        String.fromCharCodes(bytesToEncrypt),
-        iv: iv
-    );
-    final finalBytes = iv.bytes + [paddingLength] + encrypted.bytes;
-    return base64.encode(finalBytes);
-  }
-  String decryptData(Uint8List keyBytes, String data){
-    final dataBytes = base64.decode(data);
-
-    final ivBytes = dataBytes.sublist(0,16);
-    final paddingLength = dataBytes[16];
-    final bytesToDecrypt = dataBytes.sublist(17);
-
-    final iv = Encrypt.IV(ivBytes);
-    final key = Encrypt.Key(keyBytes);
-    final aes = Encrypt.Encrypter(Encrypt.AES(
-      key,
-      mode: Encrypt.AESMode.cbc,
-      padding: null
-    ));
-
-    final decrypted = aes.decrypt(
-        Encrypt.Encrypted(bytesToDecrypt),
-        iv: iv
-    );
-    final decryptedBytes = decrypted.codeUnits;
-    final finalBytes = decryptedBytes.sublist(paddingLength);
-    return utf8.decode(finalBytes);
   }
 }
 

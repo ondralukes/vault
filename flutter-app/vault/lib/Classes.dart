@@ -18,5 +18,7 @@ class Vault {
 
   VaultState state = VaultState.Locked;
   String codename;
+  String name;
+
   String accessToken;
 }
