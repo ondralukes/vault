@@ -158,7 +158,9 @@ class SignInFormState extends State<SignInForm> {
                         text: '',
                       ),
                     )),
-                Center(
+                Visibility(
+                  visible: canSubmit,
+                  child: Center(
                     child: InkWell(
                       child: Text('or click here to sign up.'),
                       onTap: () {
@@ -171,7 +173,7 @@ class SignInFormState extends State<SignInForm> {
                                 )));
                       },
                     )
-                ),
+                )),
               ],
             )),
         backgroundColor: Theme.of(context).backgroundColor

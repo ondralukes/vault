@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vault/ServerAPI.dart';
@@ -7,7 +9,7 @@ const String url = 'https://www.ondralukes.cz/vault/';
 
 void main() => runApp(App());
 
-class App extends StatefulWidget{
+class App extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     return AppState(url);
@@ -23,12 +25,11 @@ class AppState extends State<App> {
   }
   @override
   void initState() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp
-    ]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -38,18 +39,12 @@ class AppState extends State<App> {
             backgroundColor: Colors.grey[800],
             accentColor: Colors.grey[200],
             textTheme: TextTheme(
-                body1: TextStyle(
-                    color: Colors.grey
-                ),
-                headline: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 50
-                )
-            )
-        ),
-        home: Scaffold(body: SignUpForm(
-          serverAPI: api
-        ))
-    );
+                body1: TextStyle(color: Colors.grey),
+                body2: TextStyle(color: Colors.grey[800]),
+                subhead: TextStyle(color: Colors.grey, fontSize: 20),
+                headline: TextStyle(color: Colors.grey, fontSize: 50)).apply(
+              fontFamily: Platform.isIOS ? "Courier" : "monospace"
+            )),
+        home: Scaffold(body: SignUpForm(serverAPI: api)));
   }
 }

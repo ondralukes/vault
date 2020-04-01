@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
@@ -134,6 +135,14 @@ class ServerAPI{
 
   Future<bool> logOut() async {
     user = null;
+    return true;
+  }
+
+  Future<bool> unlockVault(Vault vault) async {
+    vault.state = VaultState.Unlocking;
+    // TODO: unlock the vault
+    await Future.delayed(Duration(seconds: 3),(){});
+    vault.state = VaultState.Unlocked;
     return true;
   }
 

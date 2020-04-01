@@ -196,23 +196,23 @@ class SignUpFormState extends State<SignUpForm> {
                         text: '',
                       ),
                     )),
-                Center(
-                    child: InkWell(
-                  child: Text('or click here to sign in.'),
-                  onTap: () {
-                    Navigator.pushReplacement(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (BuildContext context) =>
-                                new SignInForm(
-                                  serverAPI: widget.serverAPI,
-                                )));
-                  },
-                )
-                ),
+                Visibility(
+                    visible: canSubmit,
+                    child: Center(
+                        child: InkWell(
+                      child: Text('or click here to sign in.'),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            new MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    new SignInForm(
+                                      serverAPI: widget.serverAPI,
+                                    )));
+                      },
+                    ))),
               ],
             )),
-        backgroundColor: Theme.of(context).backgroundColor
-    );
+        backgroundColor: Theme.of(context).backgroundColor);
   }
 }
