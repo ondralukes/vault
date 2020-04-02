@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:convert/convert.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
 
 import 'package:vault/ChangingText.dart';
@@ -43,7 +44,7 @@ class ServerAPI{
     };
 
     Http.Response resp = await Http.post(
-    url + '/user/create',
+    url + 'user/create',
     headers: headers,
     body: jsonEncode(req)
     );
@@ -66,7 +67,7 @@ class ServerAPI{
     };
 
     Http.Response tokenResp = await session.post(
-        url + '/token',
+        url + 'token',
         jsonEncode(req)
     );
 
@@ -102,7 +103,7 @@ class ServerAPI{
     };
 
     Http.Response authResp = await session.post(
-        url + '/verifyToken',
+        url + 'verifyToken',
         jsonEncode(req)
     );
 
@@ -114,7 +115,7 @@ class ServerAPI{
   }
 
   Future<Map> getUserData() async{
-    final resp = await request('/user/get/private', Map());
+    final resp = await request('user/get/private', Map());
     if(resp.statusCode == 200){
       return jsonDecode(resp.body);
     }
@@ -128,19 +129,44 @@ class ServerAPI{
 
   Future<bool> unlockVault(Vault vault) async {
     vault.state = VaultState.Unlocking;
-    // TODO: unlock the vault
-    await Future.delayed(Duration(seconds: 3),(){});
+
+    final data = {
+      'codename': vault.codename,
+      'accessToken': vault.accessToken,
+    };
+
+    final resp = await requestUnsafe('vault/get', data);
+
+    if(resp.statusCode != 200){
+      vault.state = VaultState.Locked;
+      return false;
+    }
+
+    final respObj = json.decode(resp.body);
+
+    String encryptedKey;
+    respObj['keys'].forEach((key){
+      if(key['user'] == this.user.name){
+        encryptedKey = key['key'];
+      }
+    });
+
+    vault.key = await CryptoTools.rsaDecryptRaw(this.user.rsa, base64.decode(encryptedKey));
+    debugPrint(hex.encode(vault.key));
+
+    vault.name = await CryptoTools.decryptData(vault.key, respObj['name']);
+
     vault.state = VaultState.Unlocked;
     return true;
   }
 
-  Future<Http.Response> request(String relativeUrl, Map data,) async {
+  Future<Http.Response> request(String relativeUrl, Map data) async {
     Map req = {
       'name': this.user.name,
     };
 
     Http.Response tokenResp = await session.post(
-        url + '/token',
+        url + 'token',
         jsonEncode(req)
     );
 
@@ -154,6 +180,10 @@ class ServerAPI{
 
     data['signedToken'] = hex.encode(signedToken);
 
+    return await requestUnsafe(relativeUrl, data);
+  }
+
+  Future<Http.Response> requestUnsafe(String relativeUrl, Map data) async {
     Http.Response authResp = await session.post(
         url + relativeUrl,
         jsonEncode(data)

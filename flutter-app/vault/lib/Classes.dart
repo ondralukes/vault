@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:pointycastle/export.dart';
 
 enum VaultState{
@@ -19,6 +21,6 @@ class Vault {
   VaultState state = VaultState.Locked;
   String codename;
   String name;
-
   String accessToken;
+  Uint8List key;
 }

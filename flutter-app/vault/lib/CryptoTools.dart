@@ -42,26 +42,27 @@ class CryptoTools{
   }
 
   static Future<String> encryptData(Uint8List keyBytes, String data) async {
+    return base64.encode(await encryptDataRaw(keyBytes, utf8.encode(data)));
+  }
+  static Future<Uint8List> encryptDataRaw(Uint8List keyBytes, Uint8List data) async {
     return await compute(
-      CryptoTools.encryptDataEntryPoint,
+        CryptoTools.encryptDataEntryPoint,
         {
           'keyBytes': keyBytes,
           'data': data
         }
     );
   }
-  static String encryptDataEntryPoint(Map args){
+  static Uint8List encryptDataEntryPoint(Map args){
     final keyBytes = args['keyBytes'];
-    final data = args['data'];
-
-    final dataBytes = utf8.encode(data);
+    final Uint8List data = args['data'];
 
     var paddingLength = 16 - (data.length % 16);
     if(paddingLength == 16) paddingLength = 0;
     final rand = Random.secure();
     final paddingBytes = List<int>.generate(paddingLength, (i) => rand.nextInt(256));
 
-    final bytesToEncrypt = paddingBytes + dataBytes;
+    final bytesToEncrypt = paddingBytes + data;
 
     final iv = Encrypt.IV.fromSecureRandom(16);
     final key = Encrypt.Key(keyBytes);
@@ -71,15 +72,18 @@ class CryptoTools{
         padding: null
     ));
 
-    final encrypted = aes.encrypt(
-        String.fromCharCodes(bytesToEncrypt),
+    final encrypted = aes.encryptBytes(
+        bytesToEncrypt,
         iv: iv
     );
     final finalBytes = iv.bytes + [paddingLength] + encrypted.bytes;
-    return base64.encode(finalBytes);
+    return finalBytes;
   }
 
   static Future<String> decryptData(Uint8List keyBytes, String data) async {
+    return utf8.decode(await decryptDataRaw(keyBytes, base64.decode(data)));
+  }
+  static Future<Uint8List> decryptDataRaw(Uint8List keyBytes, Uint8List data) async {
     return await compute(
         CryptoTools.decryptDataEntryPoint,
         {
@@ -88,15 +92,13 @@ class CryptoTools{
         }
     );
   }
-  static String decryptDataEntryPoint(Map args){
+  static Uint8List decryptDataEntryPoint(Map args){
     final keyBytes = args['keyBytes'];
-    final data = args['data'];
+    final Uint8List data = args['data'];
 
-    final dataBytes = base64.decode(data);
-
-    final ivBytes = dataBytes.sublist(0,16);
-    final paddingLength = dataBytes[16];
-    final bytesToDecrypt = dataBytes.sublist(17);
+    final ivBytes = data.sublist(0,16);
+    final paddingLength = data[16];
+    final bytesToDecrypt = data.sublist(17);
 
     final iv = Encrypt.IV(ivBytes);
     final key = Encrypt.Key(keyBytes);
@@ -106,13 +108,54 @@ class CryptoTools{
         padding: null
     ));
 
-    final decrypted = aes.decrypt(
+    final decryptedBytes = aes.decryptBytes(
         Encrypt.Encrypted(bytesToDecrypt),
         iv: iv
     );
-    final decryptedBytes = decrypted.codeUnits;
-    final finalBytes = decryptedBytes.sublist(paddingLength);
-    return utf8.decode(finalBytes);
+    final finalBytes = Uint8List.fromList(decryptedBytes.sublist(paddingLength));
+    return finalBytes;
+  }
+
+  static Future<Uint8List> rsaEncryptRaw(AsymmetricKeyPair key, Uint8List data) async {
+    return await compute(
+      rsaEncryptEntryPoint,
+      {
+        'key': key,
+        'data': data
+      }
+    );
+  }
+  static Uint8List rsaEncryptEntryPoint(Map args){
+    final key = args['key'];
+    final data = args['data'];
+
+    final rsa = Encrypt.Encrypter(Encrypt.RSA(
+      publicKey: key.publicKey,
+      privateKey: key.privateKey,
+      encoding: Encrypt.RSAEncoding.OAEP));
+
+    return Uint8List.fromList(rsa.encryptBytes(data).bytes);
+  }
+
+  static Future<Uint8List> rsaDecryptRaw(AsymmetricKeyPair key, Uint8List data) async {
+    return await compute(
+        rsaDecryptEntryPoint,
+        {
+          'key': key,
+          'data': data
+        }
+    );
+  }
+  static Uint8List rsaDecryptEntryPoint(Map args){
+    final key = args['key'];
+    final data = args['data'];
+
+    final rsa = Encrypt.Encrypter(Encrypt.RSA(
+        publicKey: key.publicKey,
+        privateKey: key.privateKey,
+        encoding: Encrypt.RSAEncoding.OAEP));
+
+    return Uint8List.fromList(rsa.decryptBytes(Encrypt.Encrypted(data)));
   }
 
   static Uint8List sign(AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> key, Uint8List data){

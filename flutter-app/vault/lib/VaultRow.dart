@@ -100,7 +100,7 @@ class VaultRowState extends State<VaultRow>{
         return '[' + animationCharacters[animationState] + ' Unlocking...]';
         break;
       case VaultState.Unlocked:
-        return '<name here>';
+        return widget.vault.name;
         break;
     }
   }
