@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vault/Classes.dart';
 import 'package:vault/ServerAPI.dart';
 import 'package:vault/SignUpForm.dart';
 
@@ -22,6 +23,7 @@ class AppState extends State<App> {
   AppState(String url) : super() {
     this.url = url;
     api = ServerAPI(url);
+    Vault.serverAPI = api;
   }
   @override
   void initState() {

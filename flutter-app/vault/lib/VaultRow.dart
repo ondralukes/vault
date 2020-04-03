@@ -59,7 +59,7 @@ class VaultRowState extends State<VaultRow>{
                   context,
                   MaterialPageRoute(
                       builder: (context) => VaultMenu(
-                        //TODO: pass serverAPI
+                        vault: widget.vault,
                       )));
               break;
           }
