@@ -158,6 +158,16 @@ class CryptoTools{
     return Uint8List.fromList(rsa.decryptBytes(Encrypt.Encrypted(data)));
   }
 
+  static bool verify(RSAPublicKey publicKey, Uint8List data, Uint8List signature){
+    final signer = Encrypt.Signer(
+        Encrypt.RSASigner(
+            Encrypt.RSASignDigest.SHA256,
+            publicKey: publicKey,
+        )
+    );
+    return signer.verifyBytes(data, Encrypt.Encrypted(signature));
+  }
+
   static Uint8List sign(AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> key, Uint8List data){
     final signer = Encrypt.Signer(
         Encrypt.RSASigner(

@@ -98,6 +98,7 @@ class Message {
     time = new DateTime.fromMillisecondsSinceEpoch(raw['timestamp'], isUtc: true);
     if(raw.containsKey('sender')){
       if(raw.containsKey('signature')){
+        signature = raw['signature'];
         type = MessageType.Signed;
       } else {
         type = MessageType.NotSigned;
@@ -108,6 +109,7 @@ class Message {
   }
   String content;
   String sender;
+  String signature;
   DateTime time;
   MessageType type;
 }

@@ -177,12 +177,32 @@ class ServerAPI {
       try {
         final decrypted = await CryptoTools.decryptData(vault.key, encrypted);
         final raw = json.decode(decrypted);
-        result.add(Message(raw: raw));
+        Message msg = Message(raw: raw);
+        if(msg.type == MessageType.Signed){
+          final valid = await verifySignature(msg);
+          if(!valid) msg = Message();
+        }
+        result.add(msg);
       } catch (_) {
         result.add(Message());
       }
     }
     return result;
+  }
+
+  Future<bool> verifySignature(Message message) async {
+    Map req = {
+      'name': message.sender
+    };
+    final resp = await requestUnsafe('user/get/public', req);
+    if(resp.statusCode != 200) return false;
+    final respJson = json.decode(resp.body);
+    RSAPublicKey publicKey = RsaKeyHelper()
+        .parsePublicKeyFromPem(respJson['rsa']['public']);
+    final stringToSign = message.content + 'T' + message.time.millisecondsSinceEpoch.toString();
+    final bytes = utf8.encode(stringToSign);
+    final signatureBytes = base64.decode(message.signature);
+    return CryptoTools.verify(publicKey, bytes, signatureBytes);
   }
 
   Future<Http.Response> request(String relativeUrl, Map data) async {
