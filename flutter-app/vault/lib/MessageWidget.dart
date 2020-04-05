@@ -22,22 +22,25 @@ class MessageWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      message.type == MessageType.Anonymous
-                          ? '[Anonymous]'
-                          : message.sender,
+                      message.type == MessageType.Corrupted
+                          ? '[Corrupted]'
+                          : (message.type == MessageType.Anonymous
+                              ? '[Anonymous]'
+                              : message.sender),
                       style: Theme.of(context)
                           .textTheme
                           .body2
                           .apply(fontSizeDelta: 5, fontWeightDelta: 3),
                     ),
                     Text(
-                      message.content,
+                      message.type==MessageType.Corrupted?'[Corrupted]':message.content,
                       style: Theme.of(context).textTheme.body2,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         Text(
+                          message.type==MessageType.Corrupted?'[Corrupted]':
                             new DateFormat.yMd().format(message.time) +
                                 '\n' +
                                 new DateFormat.jms().format(message.time),
