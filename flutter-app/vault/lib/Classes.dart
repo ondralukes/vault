@@ -94,6 +94,8 @@ class Message {
       return;
     }
     content = raw['content'];
+    sender = raw['sender'];
+    time = new DateTime.fromMillisecondsSinceEpoch(raw['timestamp'], isUtc: true);
     if(raw.containsKey('sender')){
       if(raw.containsKey('signature')){
         type = MessageType.Signed;
