@@ -68,10 +68,14 @@ class MessagesWidgetState extends State<MessagesWidget> {
       setState(() {
         fetchingOlder = true;
       });
-      final newMessages = await widget.vault.getOlderMessages();
+      await widget.vault.getOlderMessages();
       setState(() {
         fetchingOlder = false;
       });
+    }
+    final newMessages = await widget.vault.getNewerMessages();
+    if (newMessages) {
+      setState(() {});
     }
     messageFetcher = Timer(Duration(milliseconds: 250), getMessages);
   }

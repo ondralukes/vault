@@ -41,9 +41,9 @@ class MessageWidget extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           message.type==MessageType.Corrupted?'[Corrupted]':
-                            new DateFormat.yMd().format(message.time) +
+                            new DateFormat.yMd().format(message.time.toLocal()) +
                                 '\n' +
-                                new DateFormat.jms().format(message.time),
+                                new DateFormat.jms().format(message.time.toLocal()),
                             style: Theme.of(context)
                                 .textTheme
                                 .body2

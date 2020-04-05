@@ -84,6 +84,14 @@ class Vault {
     oldestIndex -= messages.length;
     return true;
   }
+
+  Future<bool> getNewerMessages() async {
+    final messages = await serverAPI.getMessages(this, newestIndex);
+    if(messages.length == 0) return false;
+    newerMessages.addAll(messages.reversed);
+    newestIndex += messages.length;
+    return true;
+  }
 }
 
 class Message {
