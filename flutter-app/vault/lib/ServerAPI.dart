@@ -151,7 +151,7 @@ class ServerAPI {
   }
 
   Future<List> getMessages(Vault vault, int offset) async {
-    var count = 32;
+    var count = 8;
     if (offset < 0) {
       count += offset;
       offset = 0;

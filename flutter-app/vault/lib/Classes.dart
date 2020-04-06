@@ -69,7 +69,7 @@ class Vault {
 
   Future<bool> getOlderMessages() async {
     if (oldestIndex == 0) return false;
-    final messages = await serverAPI.getMessages(this, oldestIndex - 32);
+    final messages = await serverAPI.getMessages(this, oldestIndex - 8);
     if (messages.length == 0) return false;
     olderMessages.addAll(messages.reversed);
     oldestIndex -= messages.length;
