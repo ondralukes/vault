@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:convert/convert.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
 
 import 'package:vault/ChangingText.dart';
@@ -178,9 +177,11 @@ class ServerAPI {
         final decrypted = await CryptoTools.decryptData(vault.key, encrypted);
         final raw = json.decode(decrypted);
         Message msg = Message(raw: raw);
-        if(msg.type == MessageType.Signed){
+        if (msg.type == MessageType.Signed) {
           final valid = await verifySignature(msg);
-          if(!valid) msg = Message();
+          if (!valid) {
+            msg = Message();
+          }
         }
         result.add(msg);
       } catch (_) {
@@ -189,17 +190,28 @@ class ServerAPI {
     }
     return result;
   }
+  
+  Future<void> sendMessage(Vault vault, String encryptedMessage) async {
+    final req = {
+      'codename': vault.codename,
+      'accessToken': vault.accessToken,
+      'message': encryptedMessage
+    };
+    final resp = await requestUnsafe('message/send', req);
+    if(resp.statusCode != 200){
+      throw('Server returned error code.');
+    }
+  }
 
   Future<bool> verifySignature(Message message) async {
-    Map req = {
-      'name': message.sender
-    };
+    Map req = {'name': message.sender};
     final resp = await requestUnsafe('user/get/public', req);
-    if(resp.statusCode != 200) return false;
+    if (resp.statusCode != 200) return false;
     final respJson = json.decode(resp.body);
-    RSAPublicKey publicKey = RsaKeyHelper()
-        .parsePublicKeyFromPem(respJson['rsa']['public']);
-    final stringToSign = message.content + 'T' + message.time.millisecondsSinceEpoch.toString();
+    RSAPublicKey publicKey =
+        RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
+    final stringToSign =
+        message.content + 'T' + message.time.millisecondsSinceEpoch.toString();
     final bytes = utf8.encode(stringToSign);
     final signatureBytes = base64.decode(message.signature);
     return CryptoTools.verify(publicKey, bytes, signatureBytes);

@@ -21,7 +21,11 @@ class MessagesWidgetState extends State<MessagesWidget> {
   double scroll;
 
   bool fetchingOlder = false;
-  MessageType type = MessageType.Anonymous;
+  MessageType messageType = MessageType.Anonymous;
+  String messageContent;
+
+  bool sending = false;
+  final textController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +51,15 @@ class MessagesWidgetState extends State<MessagesWidget> {
               padding: EdgeInsets.only(right: 5, left: 5, bottom: 5),
               child: TextFormField(
                 maxLines: null,
+                onChanged: (value) {
+                  this.messageContent = value;
+                },
                 keyboardType: TextInputType.multiline,
+                controller: textController,
                 decoration: InputDecoration(
-                  hintText: type == MessageType.Anonymous
+                  hintText: messageType == MessageType.Anonymous
                       ? 'Send anonymous message'
-                      : type == MessageType.NotSigned
+                      : messageType == MessageType.NotSigned
                           ? 'Send message'
                           : 'Send signed message',
                   enabledBorder: OutlineInputBorder(
@@ -82,15 +90,15 @@ class MessagesWidgetState extends State<MessagesWidget> {
                     child: InkWell(
                       onTap: () {
                         setState(() {
-                          switch (type) {
+                          switch (messageType) {
                             case MessageType.Anonymous:
-                              type = MessageType.NotSigned;
+                              messageType = MessageType.NotSigned;
                               break;
                             case MessageType.NotSigned:
-                              type = MessageType.Signed;
+                              messageType = MessageType.Signed;
                               break;
                             case MessageType.Signed:
-                              type = MessageType.Anonymous;
+                              messageType = MessageType.Anonymous;
                               break;
                             case MessageType.Corrupted:
                               break;
@@ -98,27 +106,43 @@ class MessagesWidgetState extends State<MessagesWidget> {
                         });
                       },
                       child: SvgPicture.asset(
-                        type == MessageType.Anonymous
+                        messageType == MessageType.Anonymous
                             ? 'assets/anon.svg'
-                            : type == MessageType.NotSigned
+                            : messageType == MessageType.NotSigned
                                 ? 'assets/warn.svg'
                                 : 'assets/signed.svg',
                       ),
                     ))),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: Theme.of(context).primaryColor
-              ),
-              height: 50,
-              width: 50,
-              margin: EdgeInsets.only(right: 5, left: 5, bottom: 5),
-              child: IconButton(
-                iconSize: 25,
-                onPressed: () => debugPrint('send'),
-                icon: Icon(Icons.send),
-              ),
-            )
+            Visibility(
+                visible: !sending,
+                replacement: Container(
+                    margin: EdgeInsets.only(right: 5, left: 5, bottom: 5),
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator()),
+                child: Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Theme.of(context).primaryColor),
+                  height: 50,
+                  width: 50,
+                  margin: EdgeInsets.only(right: 5, left: 5, bottom: 5),
+                  child: IconButton(
+                    iconSize: 25,
+                    onPressed: () async {
+                      setState(() {
+                        sending = true;
+                      });
+                      await widget.vault
+                          .sendMessage(messageContent, messageType);
+                      setState(() {
+                        sending = false;
+                      });
+                      textController.clear();
+                    },
+                    icon: Icon(Icons.send),
+                  ),
+                )),
           ],
         ),
       )

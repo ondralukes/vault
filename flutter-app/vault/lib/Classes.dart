@@ -1,23 +1,14 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
 import 'package:vault/ServerAPI.dart';
 
 import 'CryptoTools.dart';
 
-enum VaultState{
-  Locked,
-  Unlocking,
-  Unlocked
-}
+enum VaultState { Locked, Unlocking, Unlocked }
 
-enum MessageType{
-  Anonymous,
-  Signed,
-  NotSigned,
-  Corrupted
-}
+enum MessageType { Anonymous, Signed, NotSigned, Corrupted }
 
 class User {
   String name;
@@ -26,7 +17,7 @@ class User {
 
 class Vault {
   static ServerAPI serverAPI;
-  Vault(Map map){
+  Vault(Map map) {
     this.codename = map['codename'];
     this.accessToken = map['accessToken'];
   }
@@ -52,34 +43,34 @@ class Vault {
   int newestIndex;
   int oldestIndex;
 
-  getMessage(int index){
-    if(index >= messageBase){
+  getMessage(int index) {
+    if (index >= messageBase) {
       final i = index - messageBase;
-      if(newerMessages.length <= i) return null;
+      if (newerMessages.length <= i) return null;
       return newerMessages[i];
     } else {
       final i = messageBase - index - 1;
-      if(olderMessages.length <= i) return null;
+      if (olderMessages.length <= i) return null;
       return olderMessages[i];
     }
   }
 
-  setMessage(int index, Message message){
-    if(index >= messageBase){
+  setMessage(int index, Message message) {
+    if (index >= messageBase) {
       newerMessages[index - messageBase] = message;
     } else {
       newerMessages[messageBase - index - 1] = message;
     }
   }
 
-  getMessageCount(){
+  getMessageCount() {
     return newerMessages.length + olderMessages.length;
   }
 
   Future<bool> getOlderMessages() async {
-    if(oldestIndex == 0) return false;
+    if (oldestIndex == 0) return false;
     final messages = await serverAPI.getMessages(this, oldestIndex - 32);
-    if(messages.length == 0) return false;
+    if (messages.length == 0) return false;
     olderMessages.addAll(messages.reversed);
     oldestIndex -= messages.length;
     return true;
@@ -87,25 +78,57 @@ class Vault {
 
   Future<bool> getNewerMessages() async {
     final messages = await serverAPI.getMessages(this, newestIndex);
-    if(messages.length == 0) return false;
+    if (messages.length == 0) return false;
     newerMessages.addAll(messages.reversed);
     newestIndex += messages.length;
     return true;
   }
+
+  Future<void> sendMessage(String content, MessageType type) async {
+    final msg = Message();
+    msg.content = content;
+    msg.type = type;
+    msg.time = DateTime.now().toUtc();
+    switch (type) {
+      case MessageType.Anonymous:
+        msg.sender = null;
+        break;
+      case MessageType.NotSigned:
+        msg.sender = serverAPI.user.name;
+        break;
+      case MessageType.Signed:
+        msg.sender = serverAPI.user.name;
+        final textToSign = msg.content+'T'+msg.time.toUtc().millisecondsSinceEpoch.toString();
+        final signatureBytes =
+            CryptoTools.sign(serverAPI.user.rsa, utf8.encode(textToSign));
+        msg.signature = base64.encode(signatureBytes);
+        break;
+      case MessageType.Corrupted:
+        throw ('Illegal state.');
+    }
+    final encryptedMessage = await CryptoTools.encryptData(key, msg.toString());
+    serverAPI.sendMessage(this, encryptedMessage);
+  }
 }
 
 class Message {
-  Message({Map raw}){
-    if(raw == null){
+  Message({Map raw}) {
+    if (raw == null) {
       type = MessageType.Corrupted;
       content = '[Corrupted]';
       return;
     }
     content = raw['content'];
+    if(content.length != raw['length']){
+      type = MessageType.Corrupted;
+      content = '[Corrupted]';
+      return;
+    }
     sender = raw['sender'];
-    time = new DateTime.fromMillisecondsSinceEpoch(raw['timestamp'], isUtc: true);
-    if(raw.containsKey('sender')){
-      if(raw.containsKey('signature')){
+    time =
+        new DateTime.fromMillisecondsSinceEpoch(raw['timestamp'], isUtc: true);
+    if (raw.containsKey('sender')) {
+      if (raw.containsKey('signature')) {
         signature = raw['signature'];
         type = MessageType.Signed;
       } else {
@@ -115,6 +138,25 @@ class Message {
       type = MessageType.Anonymous;
     }
   }
+
+  @override
+  toString() {
+    final map = {
+      'sender': sender,
+      'content': content,
+      'timestamp': time.millisecondsSinceEpoch,
+      'signature': signature,
+      'length': content.length
+    };
+    if (type == MessageType.Anonymous) {
+      map.remove('sender');
+    }
+    if (type != MessageType.Signed) {
+      map.remove('signature');
+    }
+    return json.encode(map);
+  }
+
   String content;
   String sender;
   String signature;
