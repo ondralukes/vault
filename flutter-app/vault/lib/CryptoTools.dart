@@ -77,7 +77,7 @@ class CryptoTools{
         iv: iv
     );
     final finalBytes = iv.bytes + [paddingLength] + encrypted.bytes;
-    return finalBytes;
+    return Uint8List.fromList(finalBytes);
   }
 
   static Future<String> decryptData(Uint8List keyBytes, String data) async {
