@@ -22,7 +22,7 @@ class MessagesWidgetState extends State<MessagesWidget> {
 
   bool fetchingOlder = false;
   MessageType messageType = MessageType.Anonymous;
-  String messageContent;
+  String messageContent = '';
 
   bool sending = false;
   final textController = TextEditingController();
@@ -62,18 +62,6 @@ class MessagesWidgetState extends State<MessagesWidget> {
                       : messageType == MessageType.NotSigned
                           ? 'Send message'
                           : 'Send signed message',
-                  enabledBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Theme.of(context).primaryColor)),
-                  focusedBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Theme.of(context).primaryColor)),
-                  errorBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
-                  focusedErrorBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
                 ),
               ),
             )),
@@ -130,6 +118,7 @@ class MessagesWidgetState extends State<MessagesWidget> {
                   child: IconButton(
                     iconSize: 25,
                     onPressed: () async {
+                      if(messageContent.length == 0) return;
                       setState(() {
                         sending = true;
                       });

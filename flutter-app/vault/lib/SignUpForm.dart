@@ -59,18 +59,6 @@ class SignUpFormState extends State<SignUpForm> {
                         Icons.perm_identity,
                         color: Theme.of(context).primaryColor,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      errorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),
@@ -95,18 +83,6 @@ class SignUpFormState extends State<SignUpForm> {
                       hintText: 'Password',
                       prefixIcon: Icon(Icons.vpn_key,
                           color: Theme.of(context).primaryColor),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      errorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),

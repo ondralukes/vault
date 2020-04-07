@@ -40,6 +40,20 @@ class AppState extends State<App> {
             primaryColor: Colors.grey,
             backgroundColor: Colors.grey[800],
             accentColor: Colors.grey[200],
+            inputDecorationTheme: InputDecorationTheme(
+              enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.grey)),
+              focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.grey)),
+              errorBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: Theme.of(context).errorColor)),
+              focusedErrorBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: Theme.of(context).errorColor)),
+            ),
             textTheme: TextTheme(
                 body1: TextStyle(color: Colors.grey),
                 body2: TextStyle(color: Colors.grey[800]),

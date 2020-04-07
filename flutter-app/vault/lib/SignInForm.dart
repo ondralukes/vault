@@ -58,18 +58,6 @@ class SignInFormState extends State<SignInForm> {
                         Icons.perm_identity,
                         color: Theme.of(context).primaryColor,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      errorBorder: OutlineInputBorder(
-                          borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),
@@ -91,18 +79,6 @@ class SignInFormState extends State<SignInForm> {
                       hintText: 'Password',
                       prefixIcon: Icon(Icons.vpn_key,
                           color: Theme.of(context).primaryColor),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor)),
-                      errorBorder: OutlineInputBorder(
-                          borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
-                      focusedErrorBorder: OutlineInputBorder(
-                          borderSide:
-                          BorderSide(color: Theme.of(context).errorColor)),
                     ),
                   ),
                 ),

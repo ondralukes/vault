@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vault/NewVaultMenu.dart';
 import 'package:vault/SignInForm.dart';
 import 'package:vault/VaultList.dart';
 
@@ -26,6 +27,16 @@ class MainMenuState extends State<MainMenu> {
       appBar: AppBar(
         title: Text('Your Vaults'),
         actions: <Widget>[
+          IconButton(
+            onPressed: () async {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) => NewVaultMenu()
+              ));
+            },
+            icon: Icon(
+                Icons.add
+            ),
+          ),
           IconButton(
             onPressed: () async {
               final success = await widget.serverAPI.logOut();
