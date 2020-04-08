@@ -22,6 +22,12 @@ class VaultListState extends State<VaultList> {
     super.initState();
   }
 
+  void clear(){
+    setState(() {
+      vaults.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (vaults == null) {

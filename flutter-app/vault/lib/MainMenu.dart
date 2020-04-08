@@ -16,6 +16,7 @@ class MainMenu extends StatefulWidget {
 }
 
 class MainMenuState extends State<MainMenu> {
+  GlobalKey vaultList = GlobalKey<VaultListState>();
   @override
   initState() {
     super.initState();
@@ -30,7 +31,9 @@ class MainMenuState extends State<MainMenu> {
           IconButton(
             onPressed: () async {
               Navigator.push(context, MaterialPageRoute(
-                builder: (context) => NewVaultMenu()
+                builder: (context) => NewVaultMenu(
+                  serverApi: widget.serverAPI,
+                )
               ));
             },
             icon: Icon(

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:pointycastle/export.dart';
 
@@ -215,6 +217,39 @@ class ServerAPI {
     final bytes = utf8.encode(stringToSign);
     final signatureBytes = base64.decode(message.signature);
     return CryptoTools.verify(publicKey, bytes, signatureBytes);
+  }
+
+  Future<bool> createVault
+      (String codename, String name, ChangingTextState processIndicator) async {
+    processIndicator.setText('Generating key');
+    final random = Random.secure();
+    final key = Uint8List(32);
+    for(var i = 0;i<32;i++){
+      key[i] = random.nextInt(256);
+    }
+
+    processIndicator.setText('Encrypting key');
+    final encryptedName = await CryptoTools.encryptData(key, name);
+    final encryptedKey = await CryptoTools.rsaEncryptRaw(user.rsa, key);
+    Map req = {
+      'codename': codename,
+      'name': encryptedName,
+      'keys': [
+        {
+          'user': user.name,
+          'key': base64.encode(encryptedKey)
+        }
+      ]
+    };
+
+    processIndicator.setText('Sending request');
+    final resp = await request('vault/create', req);
+    if(resp.statusCode != 200){
+      processIndicator.setText('Failed:' + resp.body);
+      return false;
+    }
+    processIndicator.setText('Success');
+    return true;
   }
 
   Future<Http.Response> request(String relativeUrl, Map data) async {
