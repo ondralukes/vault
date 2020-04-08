@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vault/Classes.dart';
-import 'package:vault/ServerAPI.dart';
-import 'package:vault/SignUpForm.dart';
+import 'package:vault/utils/Classes.dart';
+import 'package:vault/utils/ServerAPI.dart';
+import 'package:vault/pages/SignUpForm.dart';
 
 const String url = 'https://www.ondralukes.cz/vault/';
 

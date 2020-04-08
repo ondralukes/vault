@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'Classes.dart';
+import '../utils/Classes.dart';
 import 'MessageWidget.dart';
 
 class MessagesWidget extends StatefulWidget {

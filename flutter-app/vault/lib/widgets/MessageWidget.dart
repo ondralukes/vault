@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:vault/Classes.dart';
+import 'package:vault/utils/Classes.dart';
 
 class MessageWidget extends StatelessWidget {
   const MessageWidget({key, this.message}) : super(key: key);

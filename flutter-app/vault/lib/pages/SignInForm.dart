@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vault/ChangingText.dart';
-import 'package:vault/MainMenu.dart';
-import 'package:vault/ServerAPI.dart';
-import 'package:vault/SignUpForm.dart';
+import 'package:vault/widgets/ChangingText.dart';
+import 'package:vault/pages/MainMenu.dart';
+import 'package:vault/utils/ServerAPI.dart';
+import 'package:vault/pages/SignUpForm.dart';
 
 class SignInForm extends StatefulWidget {
   const SignInForm({Key key, this.serverAPI}) : super(key: key);

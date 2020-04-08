@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vault/MainMenu.dart';
-import 'package:vault/ServerAPI.dart';
+import 'package:vault/pages/MainMenu.dart';
+import 'package:vault/utils/ServerAPI.dart';
 
-import 'ChangingText.dart';
+import '../widgets/ChangingText.dart';
 
 class NewVaultMenu extends StatefulWidget {
   const NewVaultMenu(

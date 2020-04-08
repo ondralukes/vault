@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:pointycastle/export.dart';
 
-import 'package:vault/ChangingText.dart';
-import 'package:vault/CryptoTools.dart';
-import 'package:vault/rsa_pem.dart';
+import 'package:vault/widgets/ChangingText.dart';
+import 'package:vault/utils/CryptoTools.dart';
+import 'package:vault/utils/rsa_pem.dart';
 
 import 'package:http/http.dart' as Http;
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:pointycastle/export.dart';
-import 'package:vault/ServerAPI.dart';
+import 'package:vault/utils/ServerAPI.dart';
 
 import 'CryptoTools.dart';
 

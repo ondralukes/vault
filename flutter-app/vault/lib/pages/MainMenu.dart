@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:vault/NewVaultMenu.dart';
-import 'package:vault/SignInForm.dart';
-import 'package:vault/VaultList.dart';
+import 'package:vault/pages/NewVaultMenu.dart';
+import 'package:vault/pages/SignInForm.dart';
+import 'package:vault/widgets/VaultList.dart';
 
-import 'ServerAPI.dart';
+import '../utils/ServerAPI.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({Key key, this.serverAPI}) : super(key: key);
