@@ -37,6 +37,7 @@ class Vault {
   String name;
   String accessToken;
   Uint8List key;
+  List<String> keys = List<String>();
   int messageBase;
   List<Message> newerMessages = List<Message>();
   List<Message> olderMessages = List<Message>();
@@ -65,6 +66,10 @@ class Vault {
 
   getMessageCount() {
     return newerMessages.length + olderMessages.length;
+  }
+
+  getTotalMessageCount(){
+    return newestIndex;
   }
 
   Future<bool> getOlderMessages() async {

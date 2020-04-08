@@ -139,6 +139,7 @@ class ServerAPI {
 
     String encryptedKey;
     respObj['keys'].forEach((key) {
+      vault.keys.add(key['user']);
       if (key['user'] == this.user.name) {
         encryptedKey = key['key'];
       }

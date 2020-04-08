@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vault/widgets/MessagesWidget.dart';
+import 'package:vault/widgets/SettingsWidget.dart';
 
 import '../utils/Classes.dart';
 
@@ -33,7 +34,7 @@ class VaultMenu extends StatelessWidget {
           body: TabBarView(
             children: <Widget>[
               MessagesWidget(vault: vault),
-              Text('Settings')
+              SettingsWidget(vault: vault),
             ],
           ),
           backgroundColor: Theme.of(context).backgroundColor,
