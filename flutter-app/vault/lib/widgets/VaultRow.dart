@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:vault/Classes.dart';
-import 'package:vault/ServerAPI.dart';
+import 'package:vault/utils/Classes.dart';
+import 'package:vault/utils/ServerAPI.dart';
 
-import 'VaultMenu.dart';
+import '../pages/VaultMenu.dart';
 
 class VaultRow extends StatefulWidget{
   VaultRow({Key key, this.vault, this.serverAPI}) : super(key: key);

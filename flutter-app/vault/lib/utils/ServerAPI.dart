@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:pointycastle/export.dart';
 
-import 'package:vault/ChangingText.dart';
-import 'package:vault/CryptoTools.dart';
-import 'package:vault/rsa_pem.dart';
+import 'package:vault/widgets/ChangingText.dart';
+import 'package:vault/utils/CryptoTools.dart';
+import 'package:vault/utils/rsa_pem.dart';
 
 import 'package:http/http.dart' as Http;
 
@@ -136,7 +138,9 @@ class ServerAPI {
     final respObj = json.decode(resp.body);
 
     String encryptedKey;
+    vault.keys.clear();
     respObj['keys'].forEach((key) {
+      vault.keys.add(key['user']);
       if (key['user'] == this.user.name) {
         encryptedKey = key['key'];
       }
@@ -204,12 +208,10 @@ class ServerAPI {
   }
 
   Future<bool> verifySignature(Message message) async {
-    Map req = {'name': message.sender};
-    final resp = await requestUnsafe('user/get/public', req);
-    if (resp.statusCode != 200) return false;
-    final respJson = json.decode(resp.body);
-    RSAPublicKey publicKey =
-        RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
+    RSAPublicKey publicKey = await getPublicKey(message.sender);
+    if(publicKey == null){
+      return false;
+    }
     final stringToSign =
         message.content + 'T' + message.time.millisecondsSinceEpoch.toString();
     final bytes = utf8.encode(stringToSign);
@@ -217,6 +219,46 @@ class ServerAPI {
     return CryptoTools.verify(publicKey, bytes, signatureBytes);
   }
 
+  Future<bool> createVault
+      (String codename, String name, ChangingTextState processIndicator) async {
+    processIndicator.setText('Generating key');
+    final random = Random.secure();
+    final key = Uint8List(32);
+    for(var i = 0;i<32;i++){
+      key[i] = random.nextInt(256);
+    }
+
+    processIndicator.setText('Encrypting key');
+    final encryptedName = await CryptoTools.encryptData(key, name);
+    final encryptedKey = await CryptoTools.rsaEncryptRaw(user.rsa, key);
+    Map req = {
+      'codename': codename,
+      'name': encryptedName,
+      'keys': [
+        {
+          'user': user.name,
+          'key': base64.encode(encryptedKey)
+        }
+      ]
+    };
+
+    processIndicator.setText('Sending request');
+    final resp = await request('vault/create', req);
+    if(resp.statusCode != 200){
+      processIndicator.setText('Failed:' + resp.body);
+      return false;
+    }
+    processIndicator.setText('Success');
+    return true;
+  }
+
+  Future<RSAPublicKey> getPublicKey(String name) async{
+    Map req = {'name': name};
+    final resp = await requestUnsafe('user/get/public', req);
+    if (resp.statusCode != 200) return null;
+    final respJson = json.decode(resp.body);
+    return RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
+  }
   Future<Http.Response> request(String relativeUrl, Map data) async {
     Map req = {
       'name': this.user.name,

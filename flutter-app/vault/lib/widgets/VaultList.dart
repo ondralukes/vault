@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vault/ServerAPI.dart';
-import 'package:vault/VaultRow.dart';
+import 'package:vault/utils/ServerAPI.dart';
+import 'package:vault/widgets/VaultRow.dart';
 
-import 'Classes.dart';
+import '../utils/Classes.dart';
 
 class VaultList extends StatefulWidget {
   const VaultList({Key key, this.serverAPI}) : super(key: key);
@@ -20,6 +20,12 @@ class VaultListState extends State<VaultList> {
   void initState() {
     loadVaults();
     super.initState();
+  }
+
+  void clear(){
+    setState(() {
+      vaults.clear();
+    });
   }
 
   @override
