@@ -138,6 +138,7 @@ class ServerAPI {
     final respObj = json.decode(resp.body);
 
     String encryptedKey;
+    vault.keys.clear();
     respObj['keys'].forEach((key) {
       vault.keys.add(key['user']);
       if (key['user'] == this.user.name) {
@@ -207,12 +208,10 @@ class ServerAPI {
   }
 
   Future<bool> verifySignature(Message message) async {
-    Map req = {'name': message.sender};
-    final resp = await requestUnsafe('user/get/public', req);
-    if (resp.statusCode != 200) return false;
-    final respJson = json.decode(resp.body);
-    RSAPublicKey publicKey =
-        RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
+    RSAPublicKey publicKey = await getPublicKey(message.sender);
+    if(publicKey == null){
+      return false;
+    }
     final stringToSign =
         message.content + 'T' + message.time.millisecondsSinceEpoch.toString();
     final bytes = utf8.encode(stringToSign);
@@ -253,6 +252,13 @@ class ServerAPI {
     return true;
   }
 
+  Future<RSAPublicKey> getPublicKey(String name) async{
+    Map req = {'name': name};
+    final resp = await requestUnsafe('user/get/public', req);
+    if (resp.statusCode != 200) return null;
+    final respJson = json.decode(resp.body);
+    return RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
+  }
   Future<Http.Response> request(String relativeUrl, Map data) async {
     Map req = {
       'name': this.user.name,

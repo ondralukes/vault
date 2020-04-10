@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
 import 'package:vault/utils/ServerAPI.dart';
+import 'package:vault/widgets/ChangingText.dart';
 
 import 'CryptoTools.dart';
 
@@ -68,7 +70,7 @@ class Vault {
     return newerMessages.length + olderMessages.length;
   }
 
-  getTotalMessageCount(){
+  getTotalMessageCount() {
     return newestIndex;
   }
 
@@ -103,7 +105,9 @@ class Vault {
         break;
       case MessageType.Signed:
         msg.sender = serverAPI.user.name;
-        final textToSign = msg.content+'T'+msg.time.toUtc().millisecondsSinceEpoch.toString();
+        final textToSign = msg.content +
+            'T' +
+            msg.time.toUtc().millisecondsSinceEpoch.toString();
         final signatureBytes =
             CryptoTools.sign(serverAPI.user.rsa, utf8.encode(textToSign));
         msg.signature = base64.encode(signatureBytes);
@@ -113,6 +117,42 @@ class Vault {
     }
     final encryptedMessage = await CryptoTools.encryptData(key, msg.toString());
     serverAPI.sendMessage(this, encryptedMessage);
+  }
+
+  Future<bool> addMember(String name, ChangingTextState process) async {
+    process.setText('Obtaining public key.');
+    RSAPublicKey publicKey = await serverAPI.getPublicKey(name);
+    if (publicKey == null) {
+      process.setText('Failed to obtain public key. Check username.');
+      return false;
+    }
+    process.setText('Encrypting vault key.');
+    Uint8List userKeyBytes;
+    try {
+      AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey> keypair =
+          new AsymmetricKeyPair(publicKey, null);
+      userKeyBytes = await CryptoTools.rsaEncryptRaw(keypair, this.key);
+    } catch (_) {
+      process.setText('Encryption failed.');
+      return false;
+    }
+    final userKeyEncoded = base64.encode(userKeyBytes);
+    process.setText('Sending request.');
+    Map req = {
+      'codename': this.codename,
+      'key': {
+        'key': userKeyEncoded,
+        'user': name
+      }
+    };
+    final resp = await serverAPI.request('vault/member/add', req);
+    if(resp.statusCode != 200){
+      process.setText('Failed: '+ resp.body);
+      return false;
+    }
+    process.setText('Updating info.');
+    await serverAPI.unlockVault(this);
+    return true;
   }
 }
 
@@ -124,7 +164,7 @@ class Message {
       return;
     }
     content = raw['content'];
-    if(content.length != raw['length']){
+    if (content.length != raw['length']) {
       type = MessageType.Corrupted;
       content = '[Corrupted]';
       return;
