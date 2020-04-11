@@ -212,6 +212,53 @@ describe('Testing messages', () => {
   });
 });
 
+describe('Testing vault leaving', () => {
+  it('can leave', async (done) =>{
+    var res = await http
+    .post('/token')
+    .set('Accept', 'application/json')
+    .send(registerParams);
+
+    var data = JSON.parse(res.text);
+    expect(res.statusCode).toEqual(200);
+    expect(data.token).toBeDefined();
+    var token = data.token;
+    var key = new RSA(userRsaPrivate);
+    var signedToken = key.sign(token, 'hex', 'hex');
+    var req = {
+      codename: vaultCodename,
+      signedToken: signedToken
+    };
+    res = await http
+    .post('/vault/leave')
+    .send(req);
+    expect(res.statusCode).toEqual(200);
+    done();
+  });
+
+  it('vault should be gone', async (done) =>{
+    var res = await http
+    .post('/token')
+    .set('Accept', 'application/json')
+    .send(registerParams);
+
+    var data = JSON.parse(res.text);
+    expect(res.statusCode).toEqual(200);
+    expect(data.token).toBeDefined();
+    var token = data.token;
+    var key = new RSA(userRsaPrivate);
+    var signedToken = key.sign(token, 'hex', 'hex');
+    res = await http
+    .post('/user/get/private')
+    .send({signedToken: signedToken});
+    expect(res.statusCode).toEqual(200);
+    data = JSON.parse(res.text);
+    expect(data.rsa).toEqual(registerParams.rsa);
+    expect(data.vaults).toHaveLength(0);
+    done();
+  });
+})
+
 function encryptData(hexKey, data){
   var key = Buffer.from(hexKey, 'hex');
   data = aes.utils.utf8.toBytes(data);

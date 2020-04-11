@@ -154,6 +154,20 @@ class Vault {
     await serverAPI.unlockVault(this);
     return true;
   }
+
+  Future<bool> leave(ChangingTextState process) async {
+    process.setText('Sending request.');
+    Map req = {
+      'codename': this.codename,
+    };
+    final resp = await serverAPI.request('vault/leave', req);
+    if(resp.statusCode != 200){
+      process.setText('Failed: '+ resp.body);
+      return false;
+    }
+    process.setText('Done.');
+    return true;
+  }
 }
 
 class Message {

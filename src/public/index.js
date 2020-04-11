@@ -41,6 +41,7 @@ function init(){
   document.getElementById('sidebar-item-create').onclick = function(){closeVault(true);};
   document.getElementById('message-text').onkeydown = textareaOnKeyDown;
   document.getElementById('messages').onscroll = onScrollMessages;
+  document.getElementById('vault-leave-btn').onclick = leaveVault;
   listVaults();
   setInterval(function(){
     //Update generating counter
@@ -661,6 +662,24 @@ function getUserPublic(name, callback){
       name: name
     }
   ));
+}
+
+function leaveVault(){
+  var req = {
+    codename: openedVault
+  };
+
+  authenticatedRequest('leave vault', 'vault/leave', req, (response, status) => {
+    if(status != 200){
+      throwError(response);
+      forgetRSA();
+    } else {
+      //Re-list vaults
+      closeVault();
+      vaults = {};
+      listVaults();
+    }
+  }, true);
 }
 ///XHR and auth overlay
 var decryptedRSA;
