@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vault/pages/MainMenu.dart';
 import 'package:vault/utils/Classes.dart';
 import 'package:vault/widgets/ChangingText.dart';
 
@@ -13,8 +14,10 @@ class SettingsWidget extends StatefulWidget {
 
 class SettingsWidgetState extends State<SettingsWidget> {
   final addingStatusKey = GlobalKey<ChangingTextState>();
+  final leavingStatusKey = GlobalKey<ChangingTextState>();
   String newMemberName = '';
   bool addingMember = false;
+  bool leavingVault = false;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -54,6 +57,11 @@ class SettingsWidgetState extends State<SettingsWidget> {
                   ]),
             ),
           ),
+          Divider(
+            color: Theme.of(context).primaryColor,
+            thickness: 2,
+          ),
+          /* Members list */
           Text(
             'Members:',
             style: Theme.of(context).textTheme.subhead,
@@ -62,6 +70,10 @@ class SettingsWidgetState extends State<SettingsWidget> {
             shrinkWrap: true,
             itemCount: widget.vault.keys.length,
             itemBuilder: (context, i) => buildRow(i),
+          ),
+          Divider(
+            color: Theme.of(context).primaryColor,
+            thickness: 2,
           ),
           Visibility(
             visible: !addingMember,
@@ -106,6 +118,60 @@ class SettingsWidgetState extends State<SettingsWidget> {
                   padding: EdgeInsets.all(5),
                   child: ChangingText(
                     key: addingStatusKey,
+                    text: '',
+                  ))),
+          Divider(
+            color: Theme.of(context).primaryColor,
+            thickness: 2,
+          ),
+          Visibility(
+            visible: !leavingVault,
+            child: Form(
+              child: Column(
+                children: <Widget>[
+                  RaisedButton(
+                      onPressed: () async {
+                        setState(() {
+                         leavingVault = true;
+                        });
+                        final success = await widget.vault.leave(leavingStatusKey.currentState);
+                        if(success){
+                          //Pop new vault menu
+                          Navigator.pop(context);
+
+                          //Replace main menu
+                          Navigator.pushReplacement(context,
+                              MaterialPageRoute(
+                                  builder: (context) => MainMenu(
+                                    serverAPI: Vault.serverAPI,
+                                  )
+                              ));
+                        }
+                        setState(() {
+                          leavingVault = false;
+                        });
+                      },
+                      color: Colors.grey[700],
+                      child: Text(
+                        'Leave vault',
+                        style: Theme.of(context).textTheme.body1,
+                      )),
+                  Center(
+                      child: Text(
+                          'This action cannot be undone. There is no going back after clicking the "Leave" button. You will lose access to all data in this vault.'))
+                ],
+              ),
+            ),
+          ),
+          Visibility(
+            visible: leavingVault,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          Center(
+              child: Padding(
+                  padding: EdgeInsets.all(5),
+                  child: ChangingText(
+                    key: leavingStatusKey,
                     text: '',
                   )))
         ],
