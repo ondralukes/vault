@@ -225,12 +225,6 @@ describe('Testing vault leaving', () => {
     var token = data.token;
     var key = new RSA(userRsaPrivate);
     var signedToken = key.sign(token, 'hex', 'hex');
-
-    vaultKey = await crypto.randomBytes(32);
-    var encryptedVaultKey = encryptKey(userRsa, vaultKey);
-
-    var encryptedVaultName = encryptData(vaultKey, vaultName);
-
     var req = {
       codename: vaultCodename,
       signedToken: signedToken
