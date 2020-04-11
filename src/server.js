@@ -365,6 +365,75 @@ app.post('/vault/get', async (req, res) => {
     res.end();
 });
 
+app.post('/vault/leave', async (req,res) => {
+  //Save user before the session is destroyed in auth()
+  var username = req.session.user.name;
+
+  var verified = await auth(req,res);
+  if(!verified){
+    return;
+  }
+  delete req.body.signedToken;
+
+  function validate(){
+    return new Promise((resolve, reject) => {
+      checkArgumentCount(res, reject, req.body, 1);
+      checkCodename(res, reject, req.body);
+      resolve();
+    });
+  }
+
+  function pullFromDB(db, params){
+    return new Promise((resolve, reject) => {
+      var query = {
+        codename: params.codename,
+        keys:
+        {
+          $elemMatch:
+          {
+            user: params.user
+          }
+        }
+      };
+      var update = {
+        $pull:
+        {
+          keys: {user: params.user}
+        }
+      };
+      db.collection('vaults').updateOne(query, update, (err, dbres) => {
+        if(err){
+          throwDBError(res, reject, err);
+        }
+        if(dbres.result.n != 1){
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'text/plain');
+          res.write('Query did not return one vault.');
+          res.end();
+          reject();
+        }
+        resolve();
+      });
+    });
+  }
+
+  try {
+    await validate();
+    var conn = await connectToDB(res);
+    var db = conn.db('vault');
+    req.body.user = username;
+    await pullFromDB(db, req.body);
+    conn.close();
+  } catch (err){
+    if(conn) conn.close();
+    return;
+  }
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end();
+})
+
 app.post('/vault/member/add', async (req, res) => {
   //Save user before the session is destroyed in auth()
   var username = req.session.user.name;
@@ -784,7 +853,6 @@ function checkArgumentCount(res, reject, args, count){
 }
 
 function checkCodename(res, reject, args){
-  console.log(args);
   if(typeof args.codename === 'undefined' || args.codename.length === 0){
     res.statusCode = 400;
     res.setHeader('Content-Type', 'text/plain');
