@@ -18,6 +18,7 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
+  static const platform = const MethodChannel('com.ondralukes.vault/notification');
   String url;
   ServerAPI api;
   AppState(String url) : super() {
@@ -26,7 +27,13 @@ class AppState extends State<App> {
     Vault.serverAPI = api;
   }
   @override
-  void initState() {
+  void initState(){
+    debugPrint('Trying to call platform.');
+    try{
+      platform.invokeMethod('stop').then((v) => debugPrint(v));
+    } on PlatformException catch (e){
+      debugPrint('Failed: ' + e.message);
+    }
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
     super.initState();
