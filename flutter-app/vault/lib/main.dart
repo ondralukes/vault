@@ -28,12 +28,6 @@ class AppState extends State<App> {
   }
   @override
   void initState(){
-    debugPrint('Trying to call platform.');
-    try{
-      platform.invokeMethod('stop').then((v) => debugPrint(v));
-    } on PlatformException catch (e){
-      debugPrint('Failed: ' + e.message);
-    }
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
     super.initState();
