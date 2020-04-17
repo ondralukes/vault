@@ -80,6 +80,7 @@ class MainActivity: FlutterActivity() {
                 .setContentTitle("Vault Notification Service")
                 .setContentText("Notifications are paused while in app.")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setOnlyAlertOnce(true)
                 .setOngoing(true);
         notificationManager.notify(1234, builder.build());
     }

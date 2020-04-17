@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vault/utils/LocalStorage.dart';
 import 'package:vault/utils/ServerAPI.dart';
 import 'package:vault/widgets/VaultRow.dart';
 
@@ -50,6 +51,7 @@ class VaultListState extends State<VaultList> {
       vaults.clear();
       rawVaults.forEach((v) => vaults.add(Vault(v)));
     });
+    LocalStorage.saveVaults(vaults);
   }
 
   buildRow(i) {
