@@ -21,6 +21,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             showNotification("Login to initialize notifications.");
         } else {
             val vaultsJson = file.readText();
+            Log.i("NotificationWorker", vaultsJson);
             val vaults = JSONArray(vaultsJson);
             if(vaults.length() == 1){
                 showNotification("Notifications set up for 1 vault.");

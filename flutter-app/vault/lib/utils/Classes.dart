@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
+import 'package:vault/utils/LocalStorage.dart';
 import 'package:vault/utils/ServerAPI.dart';
 import 'package:vault/widgets/ChangingText.dart';
 
@@ -22,6 +23,8 @@ class Vault {
   Vault(Map map) {
     this.codename = map['codename'];
     this.accessToken = map['accessToken'];
+    this.messageBase = map['messagesCount'];
+    this.newestIndex = messageBase;
   }
 
   unlock(Map resp) async {
@@ -88,6 +91,7 @@ class Vault {
     if (messages.length == 0) return false;
     newerMessages.addAll(messages.reversed);
     newestIndex += messages.length;
+    LocalStorage.updateVault(this);
     return true;
   }
 
