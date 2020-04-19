@@ -705,13 +705,11 @@ app.post('/user/get/private', async (req, res) => {
           {$match: {temp: {$size: 1}}},
           {$project: {_id:0, temp: 0}}
         ];
-        console.log(JSON.stringify(pipeline));
         db.collection('vaults').aggregate(pipeline, async (err, dbres) => {
           if(err){
             throwDBError(res, reject, err);
           }
           var arr = await dbres.toArray();
-          console.log(arr);
           resolve(arr);
         });
       });
