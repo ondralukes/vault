@@ -33,6 +33,7 @@ class MainActivity: FlutterActivity() {
     }
 
     override fun onDestroy() {
+        createNotificationChannel();
         startNotificationService();
         super.onDestroy();
     }
@@ -82,6 +83,6 @@ class MainActivity: FlutterActivity() {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setOnlyAlertOnce(true)
                 .setOngoing(true);
-        notificationManager.notify(1234, builder.build());
+        notificationManager.notify(-1, builder.build());
     }
 }
