@@ -15,39 +15,51 @@ import androidx.work.WorkManager
 import androidx.lifecycle.LifecycleRegistry
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.os.Bundle
+import android.os.PersistableBundle
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Lifecycle
 import androidx.work.ExistingWorkPolicy
+import java.io.File
+import java.util.*
+import kotlin.concurrent.timerTask
 
 
 class MainActivity: FlutterActivity() {
     val CHANNEL_ID = "VaultNotificationChannel";
     val WORK_NAME = "VaultNotificationWorker";
     private val channel = "com.ondralukes.vault/notification";
+    private var appOpen = true;
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
         val methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel);
         methodChannel.setMethodCallHandler { call, result ->
                 result.notImplemented();
         }
+        startNotificationService();
+        Timer().scheduleAtFixedRate(timerTask {
+            if(appOpen){
+                val appDir = this@MainActivity.applicationInfo.dataDir + "/app_flutter/"
+                val timeFile = File(appDir + "app.open");
+                Log.i("Main",appDir + "app.open");
+                timeFile.writeText(System.currentTimeMillis().toString());
+            }
+        }, 0, 1000);
     }
 
     override fun onDestroy() {
-        createNotificationChannel();
-        startNotificationService();
+        appOpen = false;
         super.onDestroy();
     }
 
     override fun onPause() {
-        createNotificationChannel();
-        startNotificationService();
+        appOpen = false;
         super.onPause();
     }
 
     override fun onResume() {
-        val workManager = WorkManager.getInstance();
-        workManager.cancelUniqueWork(WORK_NAME);
-        showInAppNotification();
+        appOpen = true;
         super.onResume();
     }
     private fun startNotificationService(){

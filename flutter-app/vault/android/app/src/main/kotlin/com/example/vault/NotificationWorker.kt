@@ -16,6 +16,7 @@ import java.net.ConnectException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class NotificationWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
@@ -24,8 +25,32 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
     val WORK_NAME = "VaultNotificationWorker";
     val SERVER = "https://www.ondralukes.cz/vault/";
     override fun doWork(): Result {
-        val path = c.applicationInfo.dataDir + "/app_flutter/vaults.json";
+        val appDir = c.applicationInfo.dataDir + "/app_flutter/"
+        val timeFile = File(appDir + "app.open");
+        var openTime : Long = 0;
+        if(timeFile.exists()) {
+            openTime = timeFile.readText().toLong();
+        }
+        val time = System.currentTimeMillis();
+        if(time-openTime < 3000){
+            showNotification("Notifications are paused while in app.");
+        } else {
+            checkMessages();
+        }
+
+        val workManager = WorkManager.getInstance();
+        val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
+                .setInitialDelay(1, TimeUnit.SECONDS)
+                .build();
+        workManager.enqueueUniqueWork(WORK_NAME,ExistingWorkPolicy.REPLACE, workRequest);
+        return Result.success();
+    }
+
+    private fun checkMessages(){
+        val appDir = c.applicationInfo.dataDir + "/app_flutter/"
+        val path = appDir+ "vaults.json";
         val file = File(path);
+
         if(!file.exists()){
             showNotification("Login to initialize notifications.");
         } else {
@@ -83,13 +108,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             showNotification("Notifications set up for ${vaults.length()} vault${s}.${reqStr}");
 
         }
-
-        val workManager = WorkManager.getInstance();
-        val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
-                .setInitialDelay(1, TimeUnit.SECONDS)
-                .build();
-        workManager.enqueueUniqueWork(WORK_NAME,ExistingWorkPolicy.REPLACE, workRequest);
-        return Result.success();
     }
 
     private fun showNotification(content: String, id : Int = -1){
