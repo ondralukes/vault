@@ -46,18 +46,21 @@ class VaultListState extends State<VaultList> {
   Future<void> loadVaults() async {
     final user = await widget.serverAPI.getUserData();
     final rawVaults = user['vaults'];
-    setState(() {
-      if(vaults == null) vaults = List<Vault>();
-      vaults.clear();
-      rawVaults.forEach((v) => vaults.add(Vault(v)));
-    });
+    if(vaults == null) vaults = List<Vault>();
+    vaults.clear();
+    rawVaults.forEach((v) => vaults.add(Vault(v)));
+    for(var i =0;i<vaults.length;i++){
+      final v = vaults[i];
+      await v.updateLocalMessagesCount();
+    }
+    setState((){});
     LocalStorage.saveVaults(vaults);
   }
 
   buildRow(i) {
     if (i % 2 == 0) {
       final vault = vaults[i ~/ 2];
-      return VaultRow(serverAPI: widget.serverAPI, vault: vault);
+      return VaultRow(serverAPI: widget.serverAPI, vault: vault, vaultList: this);
     } else
     //Ignore last divider
     if (vaults.length * 2 - 1 != i) {

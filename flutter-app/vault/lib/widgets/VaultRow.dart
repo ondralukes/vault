@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:vault/utils/Classes.dart';
+import 'package:vault/utils/LocalStorage.dart';
 import 'package:vault/utils/ServerAPI.dart';
+import 'package:vault/widgets/VaultList.dart';
 
 import '../pages/VaultMenu.dart';
 
-class VaultRow extends StatefulWidget{
-  VaultRow({Key key, this.vault, this.serverAPI}) : super(key: key);
+class VaultRow extends StatefulWidget {
+  VaultRow({Key key, this.vault, this.serverAPI, this.vaultList})
+      : super(key: key);
   final Vault vault;
+  final VaultListState vaultList;
   final ServerAPI serverAPI;
 
   @override
@@ -16,21 +20,20 @@ class VaultRow extends StatefulWidget{
     return VaultRowState();
   }
 }
-class VaultRowState extends State<VaultRow>{
-  static const animationCharacters = ['|','/','―','\\'];
+
+class VaultRowState extends State<VaultRow> {
+  static const animationCharacters = ['|', '/', '―', '\\'];
   Timer timer;
   int animationState = 0;
 
   @override
-  initState(){
-    timer = Timer.periodic(
-        Duration(milliseconds: 250),
-            (t){
-          setState(() {
-          animationState++;
-          animationState %= 4;
-          });
-        });
+  initState() {
+    timer = Timer.periodic(Duration(milliseconds: 250), (t) {
+      setState(() {
+        animationState++;
+        animationState %= 4;
+      });
+    });
     super.initState();
   }
 
@@ -39,16 +42,16 @@ class VaultRowState extends State<VaultRow>{
     timer.cancel();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
         onTap: () {
-          switch(widget.vault.state){
+          switch (widget.vault.state) {
             case VaultState.Locked:
               setState(() {
-                widget.serverAPI.unlockVault(widget.vault).then((_){
-                  setState(() {
-                  });
+                widget.serverAPI.unlockVault(widget.vault).then((_) {
+                  setState(() {});
                 });
               });
               break;
@@ -59,11 +62,11 @@ class VaultRowState extends State<VaultRow>{
                   context,
                   MaterialPageRoute(
                       builder: (context) => VaultMenu(
-                        vault: widget.vault,
-                      )));
+                            vault: widget.vault,
+                            vaultList: widget.vaultList,
+                          )));
               break;
           }
-
         },
         child: Row(
           children: <Widget>[
@@ -87,12 +90,32 @@ class VaultRowState extends State<VaultRow>{
                 ),
                 Text(widget.vault.codename)
               ],
+            ),
+            Visibility(
+              visible: widget.vault.newestIndex != widget.vault.localMessagesCount,
+              child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5), color: Colors.red),
+                child: Padding(
+                  padding: EdgeInsets.only(left: 2, right: 2),
+                  child: Text(
+                    getNewMessagesText(),
+                    style: Theme.of(context).textTheme.body2,
+                  ),
+                ),
+              ),
             )
           ],
         ));
   }
-  String getNameText(){
-    switch(widget.vault.state){
+
+  String getNewMessagesText() {
+    return (widget.vault.newestIndex - widget.vault.localMessagesCount)
+        .toString();
+  }
+
+  String getNameText() {
+    switch (widget.vault.state) {
       case VaultState.Locked:
         return '[Locked]';
         break;

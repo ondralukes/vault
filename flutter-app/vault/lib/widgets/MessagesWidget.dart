@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vault/widgets/VaultList.dart';
 
 import '../utils/Classes.dart';
 import 'MessageWidget.dart';
 
 class MessagesWidget extends StatefulWidget {
-  const MessagesWidget({key, this.vault}) : super(key: key);
+  const MessagesWidget({key, this.vault, this.vaultList}) : super(key: key);
   final Vault vault;
+  final VaultListState vaultList;
   @override
   State<StatefulWidget> createState() {
     return MessagesWidgetState();
@@ -174,7 +176,8 @@ class MessagesWidgetState extends State<MessagesWidget> {
       setState(() {
         fetchingOlder = true;
       });
-      await widget.vault.getOlderMessages();
+      final newMessages = await widget.vault.getOlderMessages();
+      if(newMessages) widget.vaultList.setState((){});
       setState(() {
         fetchingOlder = false;
       });
@@ -182,6 +185,7 @@ class MessagesWidgetState extends State<MessagesWidget> {
     final newMessages = await widget.vault.getNewerMessages();
     if (newMessages) {
       setState(() {});
+      widget.vaultList.setState((){});
     }
     messageFetcher = Timer(Duration(milliseconds: 250), getMessages);
   }

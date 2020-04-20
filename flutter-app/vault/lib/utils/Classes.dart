@@ -27,6 +27,10 @@ class Vault {
     this.newestIndex = messageBase;
   }
 
+  updateLocalMessagesCount() async {
+    final c = await LocalStorage.getLocalMessagesCount(codename);
+    localMessagesCount = c;
+  }
   unlock(Map resp) async {
     this.name = await CryptoTools.decryptData(this.key, resp['name']);
     this.state = VaultState.Unlocked;
@@ -48,6 +52,7 @@ class Vault {
   List<Message> olderMessages = List<Message>();
   int newestIndex;
   int oldestIndex;
+  int localMessagesCount = 0;
 
   getMessage(int index) {
     if (index >= messageBase) {
@@ -83,6 +88,8 @@ class Vault {
     if (messages.length == 0) return false;
     olderMessages.addAll(messages.reversed);
     oldestIndex -= messages.length;
+    await LocalStorage.updateVault(this, true);
+    await updateLocalMessagesCount();
     return true;
   }
 
@@ -91,7 +98,8 @@ class Vault {
     if (messages.length == 0) return false;
     newerMessages.addAll(messages.reversed);
     newestIndex += messages.length;
-    LocalStorage.updateVault(this);
+    await LocalStorage.updateVault(this, true);
+    await updateLocalMessagesCount();
     return true;
   }
 

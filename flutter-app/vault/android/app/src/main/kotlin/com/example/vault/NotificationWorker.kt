@@ -88,17 +88,20 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
 
                     val serverVault = JSONObject(response.toString());
                     val serverMessagesCount = serverVault.getInt("messagesCount");
-                    if (serverMessagesCount > v.getInt("messagesCount")) {
+                    if (serverMessagesCount > v.getInt("notifiedMessagesCount")) {
                         val count = serverMessagesCount - v.getInt("messagesCount");
                         var s = "";
                         if (count != 1) s = "s";
                         showNotification("You have ${count} new message${s} in [${v.get("codename")}]", i);
+                        v.put("notifiedMessagesCount", serverMessagesCount);
                     }
                 } catch  (e: Exception){
                     failedRequests++;
                     continue;
                 }
             }
+
+            file.writeText(vaults.toString());
 
             var s = "";
             var reqStr = "";
@@ -117,7 +120,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                 .setContentTitle("Vault Notification Service")
                 .setContentText(content)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setOnlyAlertOnce(true)
+                .setOnlyAlertOnce(id==-1)
                 .setOngoing(id==-1);
         notificationManager.notify(id, builder.build());
     }
