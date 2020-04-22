@@ -11,6 +11,10 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 
+/**
+ * BroadcastReceiver. Starts notification WorkRequest omn boot.
+ * @constructor Creates an BroadcastReceiver.
+ */
 class BootReceiver : BroadcastReceiver(){
     val CHANNEL_ID = "VaultNotificationChannel";
     val WORK_NAME = "VaultNotificationWorker";
