@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:pointycastle/export.dart';
+import 'package:vault/utils/LocalStorage.dart';
 import 'package:vault/utils/ServerAPI.dart';
 import 'package:vault/widgets/ChangingText.dart';
 
@@ -22,8 +23,14 @@ class Vault {
   Vault(Map map) {
     this.codename = map['codename'];
     this.accessToken = map['accessToken'];
+    this.messageBase = map['messagesCount'];
+    this.newestIndex = messageBase;
   }
 
+  updateLocalMessagesCount() async {
+    final c = await LocalStorage.getLocalMessagesCount(codename);
+    localMessagesCount = c;
+  }
   unlock(Map resp) async {
     this.name = await CryptoTools.decryptData(this.key, resp['name']);
     this.state = VaultState.Unlocked;
@@ -45,6 +52,7 @@ class Vault {
   List<Message> olderMessages = List<Message>();
   int newestIndex;
   int oldestIndex;
+  int localMessagesCount = 0;
 
   getMessage(int index) {
     if (index >= messageBase) {
@@ -80,6 +88,8 @@ class Vault {
     if (messages.length == 0) return false;
     olderMessages.addAll(messages.reversed);
     oldestIndex -= messages.length;
+    await LocalStorage.updateVault(this, true);
+    await updateLocalMessagesCount();
     return true;
   }
 
@@ -88,6 +98,8 @@ class Vault {
     if (messages.length == 0) return false;
     newerMessages.addAll(messages.reversed);
     newestIndex += messages.length;
+    await LocalStorage.updateVault(this, true);
+    await updateLocalMessagesCount();
     return true;
   }
 

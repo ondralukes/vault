@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vault/utils/Classes.dart';
+import 'package:vault/utils/LocalStorage.dart';
 import 'package:vault/utils/ServerAPI.dart';
 import 'package:vault/pages/SignUpForm.dart';
 
@@ -18,6 +20,7 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
+  static const platform = const MethodChannel('com.ondralukes.vault/notification');
   String url;
   ServerAPI api;
   AppState(String url) : super() {
@@ -26,7 +29,7 @@ class AppState extends State<App> {
     Vault.serverAPI = api;
   }
   @override
-  void initState() {
+  void initState(){
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
     super.initState();

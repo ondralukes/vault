@@ -700,13 +700,17 @@ app.post('/user/get/private', async (req, res) => {
     function getUserVaults(db, name){
       return new Promise((resolve, reject) => {
         var user = { name: name };
-        var query = { keys: {$elemMatch: {user: user.name}}};
-        var projection = {_id: 0, accessToken: 1, codename: 1};
-        db.collection('vaults').find(query, {projection: projection}).toArray((err, dbres) => {
+        var pipeline = [
+          {$project: {temp: {$filter: {input: '$keys', as: 'key', cond: {$eq:['$$key.user', user.name]}}}, codename: 1, accessToken: 1, messagesCount: {$size: '$messages'}}},
+          {$match: {temp: {$size: 1}}},
+          {$project: {_id:0, temp: 0}}
+        ];
+        db.collection('vaults').aggregate(pipeline, async (err, dbres) => {
           if(err){
             throwDBError(res, reject, err);
           }
-          resolve(dbres);
+          var arr = await dbres.toArray();
+          resolve(arr);
         });
       });
     }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:vault/widgets/MessagesWidget.dart';
 import 'package:vault/widgets/SettingsWidget.dart';
+import 'package:vault/widgets/VaultList.dart';
 
 import '../utils/Classes.dart';
 
 class VaultMenu extends StatelessWidget {
-  const VaultMenu({key, this.vault}) : super(key: key);
+  const VaultMenu({key, this.vault, this.vaultList}) : super(key: key);
+  final VaultListState vaultList;
   final Vault vault;
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class VaultMenu extends StatelessWidget {
               )),
           body: TabBarView(
             children: <Widget>[
-              MessagesWidget(vault: vault),
+              MessagesWidget(vault: vault, vaultList: vaultList),
               SettingsWidget(vault: vault),
             ],
           ),

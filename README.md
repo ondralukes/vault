@@ -21,4 +21,4 @@ Data are stored in MongoDB (defined in `src/server.js:8`).
 |Adding member to vault|:heavy_check_mark:|:heavy_check_mark:|
 |Leaving vault|:heavy_check_mark:|:heavy_check_mark:|
 |Deleting vault|:x:|:x:|
-|Notifications|:x:|:x:|
+|Notifications|:x:|Android only<br>(15 min interval)|
