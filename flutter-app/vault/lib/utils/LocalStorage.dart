@@ -21,9 +21,10 @@ class LocalStorage {
   }
 
   static void saveVaults(vaults) async {
-    vaults.forEach((v){
-      updateVault(v, false);
-    });
+    for(var i = 0;i<vaults.length;i++){
+      final v = vaults[i];
+      await updateVault(v, false);
+    }
   }
 
   static Future<void> updateVault(vault, updateCount) async {
@@ -53,7 +54,8 @@ class LocalStorage {
       };
       fileVaults.add(map);
     }
-    file.writeAsString(json.encode(fileVaults));
+    await file.writeAsString(json.encode(fileVaults));
+    debugPrint(json.encode(fileVaults));
     debugPrint('Saved vaults JSON to $path');
   }
 }

@@ -89,6 +89,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                         showNotification("You have ${count} new message${s} in [${v.get("codename")}]", i);
                         v.put("notifiedMessagesCount", serverMessagesCount);
                     }
+                    conn.disconnect();
                 } catch  (e: Exception){
                     failedRequests++;
                     continue;

@@ -41,7 +41,6 @@ class MainActivity: FlutterActivity() {
             if(appOpen){
                 val appDir = this@MainActivity.applicationInfo.dataDir + "/app_flutter/"
                 val timeFile = File(appDir + "app.open");
-                Log.i("Main",appDir + "app.open");
                 timeFile.writeText(System.currentTimeMillis().toString());
             }
         }, 0, 1000);
