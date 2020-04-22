@@ -10,8 +10,6 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 import android.os.Build
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import androidx.lifecycle.LifecycleRegistry
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
@@ -20,9 +18,10 @@ import android.os.PersistableBundle
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Lifecycle
-import androidx.work.ExistingWorkPolicy
+import androidx.work.*
 import java.io.File
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timerTask
 
 
@@ -65,8 +64,11 @@ class MainActivity: FlutterActivity() {
     private fun startNotificationService(){
         createNotificationChannel();
         val workManager = WorkManager.getInstance();
-        val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java).build();
-        workManager.enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE,workRequest);
+        val workRequest =
+                PeriodicWorkRequest.Builder(NotificationWorker::class.java, 15, TimeUnit.MINUTES)
+                        .build();
+
+        workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE,workRequest);
     }
     private fun createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because

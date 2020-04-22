@@ -37,12 +37,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         } else {
             checkMessages();
         }
-
-        val workManager = WorkManager.getInstance();
-        val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
-                .setInitialDelay(1, TimeUnit.SECONDS)
-                .build();
-        workManager.enqueueUniqueWork(WORK_NAME,ExistingWorkPolicy.REPLACE, workRequest);
         return Result.success();
     }
 
