@@ -43,12 +43,12 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         if (time - openTime < 3000) {
             showNotification("Notifications are paused while in app.");
         } else {
-            checkMessages();
+            checkFile();
         }
         return Result.success();
     }
 
-    private fun checkMessages() {
+    private fun checkFile() {
         val appDir = c.applicationInfo.dataDir + "/app_flutter/"
         val path = appDir + "vaults.json";
         val file = File(path);
@@ -57,6 +57,11 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             showNotification("Login to initialize notifications.");
             return;
         }
+        checkMessages(file);
+    }
+
+    private fun checkMessages(file: File) {
+
         val vaultsJson = file.readText();
         val vaults = JSONArray(vaultsJson);
         var failedRequests = 0;
@@ -64,66 +69,62 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         val url = URL(SERVER + "vault/get");
         for (i in 0 until vaults.length()) {
             val v = vaults.get(i) as JSONObject;
-            var req = JSONObject();
-            req.put("codename", v.get("codename"));
-            req.put("accessToken", v.get("accessToken"));
-            try {
-                var conn = url.openConnection() as HttpURLConnection;
-                conn.requestMethod = "POST";
-                conn.setRequestProperty("Content-Type", "application/json");
+            if (!checkVault(v, url, i)) failedRequests++;
+        }
+        var s = "";
+        var reqStr = "";
+        if (vaults.length() != 1) s = "s";
+        if (failedRequests == 1) reqStr = " 1 request has failed.";
+        if (failedRequests > 1) reqStr = " ${failedRequests} requests has failed.";
+        showNotification("Notifications set up for ${vaults.length()} vault${s}.${reqStr}");
+        file.writeText(vaults.toString());
+    }
 
-                val outputStream = OutputStreamWriter(conn.outputStream);
-                outputStream.write(req.toString());
-                outputStream.flush();
+    private fun checkVault(v: JSONObject, url: URL, i: Int): Boolean {
+        var req = JSONObject();
+        req.put("codename", v.get("codename"));
+        req.put("accessToken", v.get("accessToken"));
+        try {
+            var conn = url.openConnection() as HttpURLConnection;
+            conn.requestMethod = "POST";
+            conn.setRequestProperty("Content-Type", "application/json");
 
-                if (conn.responseCode != 200) {
-                    failedRequests++;
-                    continue;
-                }
-                val response = StringBuffer();
-                conn.inputStream.bufferedReader().use {
-                    var line = it.readLine();
-                    while (line != null) {
-                        response.append(line);
-                        line = it.readLine();
-                    }
-                }
+            val outputStream = OutputStreamWriter(conn.outputStream);
+            outputStream.write(req.toString());
+            outputStream.flush();
 
-                val serverVault = JSONObject(response.toString());
-                val serverMessagesCount = serverVault.getInt("messagesCount");
-                if (serverMessagesCount > v.getInt("notifiedMessagesCount")) {
-                    val count = serverMessagesCount - v.getInt("messagesCount");
-                    var s = "";
-                    if (count != 1) s = "s";
-                    showNotification("You have ${count} new message${s} in [${v.get("codename")}]", i);
-                    v.put("notifiedMessagesCount", serverMessagesCount);
+            if (conn.responseCode != 200) {
+                return false;
+            }
+            val response = StringBuffer();
+            conn.inputStream.bufferedReader().use {
+                var line = it.readLine();
+                while (line != null) {
+                    response.append(line);
+                    line = it.readLine();
                 }
-                conn.disconnect();
-            } catch (e: ConnectException) {
-                failedRequests++;
-                continue;
-            } catch (e: SSLException){
-                failedRequests++;
-                continue;
-            } catch (e: SSLHandshakeException){
-                failedRequests++;
-                continue;
-            } catch (e: IOException){
-                failedRequests++;
-                continue;
             }
 
-
-            file.writeText(vaults.toString());
-
-            var s = "";
-            var reqStr = "";
-            if (vaults.length() != 1) s = "s";
-            if (failedRequests == 1) reqStr = " 1 request has failed.";
-            if (failedRequests > 1) reqStr = " ${failedRequests} requests has failed.";
-            showNotification("Notifications set up for ${vaults.length()} vault${s}.${reqStr}");
-
+            val serverVault = JSONObject(response.toString());
+            val serverMessagesCount = serverVault.getInt("messagesCount");
+            if (serverMessagesCount > v.getInt("notifiedMessagesCount")) {
+                val count = serverMessagesCount - v.getInt("messagesCount");
+                var s = "";
+                if (count != 1) s = "s";
+                showNotification("You have ${count} new message${s} in [${v.get("codename")}]", i);
+                v.put("notifiedMessagesCount", serverMessagesCount);
+            }
+            conn.disconnect();
+        } catch (e: ConnectException) {
+            return false;
+        } catch (e: SSLException) {
+            return false;
+        } catch (e: SSLHandshakeException) {
+            return false;
+        } catch (e: IOException) {
+            return false;
         }
+        return true;
     }
 
     private fun showNotification(content: String, id: Int = -1) {
