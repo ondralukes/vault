@@ -158,6 +158,10 @@ class Vault {
       }
     };
     final resp = await serverAPI.request('vault/member/add', req);
+    if(resp == null){
+      process.setText('Failed to connect.');
+      return false;
+    }
     if(resp.statusCode != 200){
       process.setText('Failed: '+ resp.body);
       return false;
@@ -173,6 +177,10 @@ class Vault {
       'codename': this.codename,
     };
     final resp = await serverAPI.request('vault/leave', req);
+    if(resp == null){
+      process.setText('Failed to connect.');
+      return false;
+    }
     if(resp.statusCode != 200){
       process.setText('Failed: '+ resp.body);
       return false;

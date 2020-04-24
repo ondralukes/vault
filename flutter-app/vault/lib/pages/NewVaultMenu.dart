@@ -24,6 +24,7 @@ class NewVaultMenuState extends State<NewVaultMenu> {
   bool canSubmit = true;
   @override
   Widget build(BuildContext context) {
+    widget.serverApi.setContext(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('New vault'),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:convert/convert.dart';
+import 'package:flutter/material.dart';
 import 'package:pointycastle/export.dart';
 
 import 'package:vault/widgets/ChangingText.dart';
@@ -15,8 +16,16 @@ import 'Classes.dart';
 class ServerAPI {
   final String url;
   final session = new Session();
+  var context;
+  var connectionLost = false;
   User user;
   ServerAPI(this.url);
+
+  setContext(context) {
+    if (ModalRoute.of(context).isCurrent) {
+      this.context = context;
+    }
+  }
 
   Future<bool> signUp(
       String name, String password, ChangingTextState processIndicator) async {
@@ -39,8 +48,14 @@ class ServerAPI {
 
     Map<String, String> headers = {'Content-Type': 'application/json'};
 
-    Http.Response resp = await Http.post(url + 'user/create',
-        headers: headers, body: jsonEncode(req));
+    Http.Response resp;
+    try {
+      resp = await Http.post(url + 'user/create',
+          headers: headers, body: jsonEncode(req));
+    } catch (e) {
+      processIndicator.setText('Failed to connect.');
+      return false;
+    }
 
     if (resp.statusCode != 200) {
       processIndicator.setText('Request failed: ' + resp.body);
@@ -60,8 +75,14 @@ class ServerAPI {
       'name': name,
     };
 
-    Http.Response tokenResp =
-        await session.post(url + 'token', jsonEncode(req));
+    Http.Response tokenResp;
+
+    try {
+      tokenResp = await session.post(url + 'token', jsonEncode(req));
+    } catch (e) {
+      processIndicator.setText('Failed to connect.');
+      return false;
+    }
 
     if (tokenResp.statusCode != 200) {
       processIndicator.setText('Request failed: ' + tokenResp.body);
@@ -97,8 +118,13 @@ class ServerAPI {
       'signedToken': hex.encode(signedToken),
     };
 
-    Http.Response authResp =
-        await session.post(url + 'verifyToken', jsonEncode(req));
+    Http.Response authResp;
+    try {
+      authResp = await session.post(url + 'verifyToken', jsonEncode(req));
+    } catch (e) {
+      processIndicator.setText('Failed to connect.');
+      return false;
+    }
 
     if (authResp.statusCode != 200) {
       processIndicator.setText('Request failed: ' + authResp.body);
@@ -109,6 +135,9 @@ class ServerAPI {
 
   Future<Map> getUserData() async {
     final resp = await request('user/get/private', Map());
+    if (resp == null) {
+      return Map();
+    }
     if (resp.statusCode == 200) {
       return jsonDecode(resp.body);
     }
@@ -129,6 +158,10 @@ class ServerAPI {
     };
 
     final resp = await requestUnsafe('vault/get', data);
+    if (resp == null) {
+      vault.state = VaultState.Locked;
+      return false;
+    }
 
     if (resp.statusCode != 200) {
       vault.state = VaultState.Locked;
@@ -169,6 +202,9 @@ class ServerAPI {
     };
 
     final resp = await requestUnsafe('message/get', data);
+    if (resp == null) {
+      return List<Message>();
+    }
     if (resp.statusCode != 200) {
       return List<Message>();
     }
@@ -194,7 +230,7 @@ class ServerAPI {
     }
     return result;
   }
-  
+
   Future<void> sendMessage(Vault vault, String encryptedMessage) async {
     final req = {
       'codename': vault.codename,
@@ -202,14 +238,14 @@ class ServerAPI {
       'message': encryptedMessage
     };
     final resp = await requestUnsafe('message/send', req);
-    if(resp.statusCode != 200){
-      throw('Server returned error code.');
+    if (resp.statusCode != 200) {
+      throw ('Server returned error code.');
     }
   }
 
   Future<bool> verifySignature(Message message) async {
     RSAPublicKey publicKey = await getPublicKey(message.sender);
-    if(publicKey == null){
+    if (publicKey == null) {
       return false;
     }
     final stringToSign =
@@ -219,12 +255,12 @@ class ServerAPI {
     return CryptoTools.verify(publicKey, bytes, signatureBytes);
   }
 
-  Future<bool> createVault
-      (String codename, String name, ChangingTextState processIndicator) async {
+  Future<bool> createVault(
+      String codename, String name, ChangingTextState processIndicator) async {
     processIndicator.setText('Generating key');
     final random = Random.secure();
     final key = Uint8List(32);
-    for(var i = 0;i<32;i++){
+    for (var i = 0; i < 32; i++) {
       key[i] = random.nextInt(256);
     }
 
@@ -235,16 +271,17 @@ class ServerAPI {
       'codename': codename,
       'name': encryptedName,
       'keys': [
-        {
-          'user': user.name,
-          'key': base64.encode(encryptedKey)
-        }
+        {'user': user.name, 'key': base64.encode(encryptedKey)}
       ]
     };
 
     processIndicator.setText('Sending request');
     final resp = await request('vault/create', req);
-    if(resp.statusCode != 200){
+    if (resp == null) {
+      processIndicator.setText('Failed to connect');
+      return false;
+    }
+    if (resp.statusCode != 200) {
       processIndicator.setText('Failed:' + resp.body);
       return false;
     }
@@ -252,20 +289,35 @@ class ServerAPI {
     return true;
   }
 
-  Future<RSAPublicKey> getPublicKey(String name) async{
+  Future<RSAPublicKey> getPublicKey(String name) async {
     Map req = {'name': name};
     final resp = await requestUnsafe('user/get/public', req);
+    if (resp == null) return null;
     if (resp.statusCode != 200) return null;
     final respJson = json.decode(resp.body);
     return RsaKeyHelper().parsePublicKeyFromPem(respJson['rsa']['public']);
   }
+
   Future<Http.Response> request(String relativeUrl, Map data) async {
     Map req = {
       'name': this.user.name,
     };
 
-    Http.Response tokenResp =
-        await session.post(url + 'token', jsonEncode(req));
+    Http.Response tokenResp;
+    while (true) {
+      try {
+        tokenResp = await session.post(url + 'token', jsonEncode(req));
+      } catch (e) {
+        if (!connectionLost) alert("Lost connection to server!");
+        connectionLost = true;
+        continue;
+      }
+      break;
+    }
+    if (connectionLost) {
+      Navigator.of(context).pop();
+    }
+    connectionLost = false;
 
     if (tokenResp.statusCode != 200) {
       return tokenResp;
@@ -282,13 +334,36 @@ class ServerAPI {
   }
 
   Future<Http.Response> requestUnsafe(String relativeUrl, Map data) async {
-    Http.Response authResp =
-        await session.post(url + relativeUrl, jsonEncode(data));
-
+    Http.Response authResp;
+    while (true) {
+      try {
+        authResp = await session.post(url + relativeUrl, jsonEncode(data));
+      } catch (e) {
+        if (!connectionLost) alert("Lost connection to server!");
+        connectionLost = true;
+        continue;
+      }
+      break;
+    }
+    if (connectionLost) {
+      Navigator.of(context).pop();
+    }
+    connectionLost = false;
     if (authResp.statusCode != 200) {
       return authResp;
     }
     return authResp;
+  }
+
+  alert(message) {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+              title: Text('Connection lost!'),
+              content: Text('Reconnecting...'));
+        });
   }
 }
 

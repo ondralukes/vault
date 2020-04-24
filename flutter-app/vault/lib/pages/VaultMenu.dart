@@ -11,6 +11,7 @@ class VaultMenu extends StatelessWidget {
   final Vault vault;
   @override
   Widget build(BuildContext context) {
+    Vault.serverAPI.setContext(context);
     return Container(
       child: SafeArea(
           child: DefaultTabController(
