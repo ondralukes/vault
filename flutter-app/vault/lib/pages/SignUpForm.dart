@@ -26,6 +26,7 @@ class SignUpFormState extends State<SignUpForm> {
 
   @override
   Widget build(BuildContext context) {
+    widget.serverAPI.setContext(context);
     return Scaffold(
         body: Form(
             key: key,

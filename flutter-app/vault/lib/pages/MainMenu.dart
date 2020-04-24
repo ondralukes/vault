@@ -24,6 +24,7 @@ class MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
+    widget.serverAPI.setContext(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Your Vaults'),
