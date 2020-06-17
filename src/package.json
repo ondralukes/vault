@@ -10,7 +10,7 @@
     "aes-js": "^3.1.2",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
-    "mongodb": "^3.5.8",
+    "mongodb": "^3.5.9",
     "node-rsa": "^1.0.8",
     "sha.js": "^2.4.11"
   },
