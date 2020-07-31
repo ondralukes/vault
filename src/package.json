@@ -15,7 +15,7 @@
     "sha.js": "^2.4.11"
   },
   "devDependencies": {
-    "jest": "^26.1.0",
+    "jest": "^26.2.1",
     "supertest": "^4.0.2",
     "supertest-session": "^4.0.0"
   }
